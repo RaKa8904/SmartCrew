@@ -13,13 +13,9 @@ const AvailabilityManagement = () => {
 
     const fetchAvailability = async () => {
         try {
-            const allCrew = await api.get('/crew');
-            const me = allCrew.data.find(c => c.userId === user.id);
-            if (me) {
-                setCrewId(me.id);
-                const res = await api.get(`/crew/${me.id}`);
-                setAvailability(res.data.availability || []);
-            }
+            const res = await api.get('/crew/me');
+            setCrewId(res.data.id);
+            setAvailability(res.data.availability || []);
         } catch (err) {
             console.error('Failed to fetch availability', err);
         } finally {

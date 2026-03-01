@@ -1,9 +1,10 @@
 const express = require('express');
-const { getAllCrew, getCrewDetails, updateCrew, deleteCrew, updateAvailability } = require('../controllers/crewController');
+const { getMyCrewProfile, getAllCrew, getCrewDetails, updateCrew, deleteCrew, updateAvailability } = require('../controllers/crewController');
 const { authMiddleware, roleMiddleware } = require('../middleware/auth');
 
 const router = express.Router();
 
+router.get('/me', authMiddleware, getMyCrewProfile);  // Any authenticated crew member
 router.get('/', authMiddleware, roleMiddleware(['admin', 'scheduler']), getAllCrew);
 router.get('/:id', authMiddleware, getCrewDetails);
 router.put('/:id', authMiddleware, roleMiddleware(['admin']), updateCrew);

@@ -91,15 +91,32 @@ const AdminDashboard = () => {
                     </div>
                     <div className="h-80 w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={utilizationData}>
+                            <BarChart data={utilizationData} margin={{ top: 5, right: 10, left: 0, bottom: 40 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                                <XAxis dataKey="crewName" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                                <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} unit="%" />
+                                <XAxis
+                                    dataKey="crewName"
+                                    stroke="#64748b"
+                                    fontSize={11}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    angle={-30}
+                                    textAnchor="end"
+                                    interval={0}
+                                />
+                                <YAxis
+                                    stroke="#64748b"
+                                    fontSize={12}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    unit="%"
+                                    domain={[0, 100]}
+                                />
                                 <Tooltip
                                     cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
                                     contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', color: '#fff' }}
+                                    formatter={(value) => [`${value}%`, 'Utilization']}
                                 />
-                                <Bar dataKey="utilization" fill="#0ea5e9" radius={[6, 6, 0, 0]} barSize={40} />
+                                <Bar dataKey="utilizationPercent" fill="#0ea5e9" radius={[6, 6, 0, 0]} barSize={40} name="Utilization" />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>

@@ -17,7 +17,8 @@ const generateWorkloadReport = async () => {
             crewType: c.crewType,
             totalFlights: c.schedules.length,
             totalHours: totalHours.toFixed(2),
-            utilization: ((totalHours / c.maxHoursPerWeek) * 100).toFixed(2) + '%'
+            utilization: ((totalHours / c.maxHoursPerWeek) * 100).toFixed(2) + '%',
+            utilizationPercent: parseFloat(((totalHours / c.maxHoursPerWeek) * 100).toFixed(2))
         };
     });
 

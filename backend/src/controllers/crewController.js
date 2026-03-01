@@ -1,6 +1,26 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+// Get own crew profile using JWT identity
+const getMyCrewProfile = async (req, res) => {
+    try {
+        const crewMember = await prisma.crew.findUnique({
+            where: { userId: req.user.id },
+            include: {
+                user: { select: { id: true, name: true, email: true, role: true } },
+                schedules: { include: { flight: true } },
+                availability: true
+            }
+        });
+        if (!crewMember) {
+            return res.status(404).json({ message: 'Crew profile not found for this user' });
+        }
+        res.json(crewMember);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
 const getAllCrew = async (req, res) => {
     try {
         const crew = await prisma.crew.findMany({
@@ -74,4 +94,4 @@ const updateAvailability = async (req, res) => {
     }
 };
 
-module.exports = { getAllCrew, getCrewDetails, updateCrew, deleteCrew, updateAvailability };
+module.exports = { getMyCrewProfile, getAllCrew, getCrewDetails, updateCrew, deleteCrew, updateAvailability };

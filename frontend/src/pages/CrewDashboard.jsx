@@ -12,14 +12,8 @@ const CrewDashboard = () => {
     useEffect(() => {
         const fetchCrewData = async () => {
             try {
-                const res = await api.get(`/crew/profile`); // Need to implement this endpoint or use /crew/:id
-                // For now using a search or similar logic if profile not direct
-                const allCrew = await api.get('/crew');
-                const me = allCrew.data.find(c => c.userId === user.id);
-                if (me) {
-                    const detailRes = await api.get(`/crew/${me.id}`);
-                    setCrewDetails(detailRes.data);
-                }
+                const res = await api.get('/crew/me');
+                setCrewDetails(res.data);
             } catch (err) {
                 console.error('Failed to fetch crew data', err);
             } finally {
