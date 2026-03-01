@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    background-color: #020617;
+    color: #f1f5f9;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.15) 0, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(3, 105, 161, 0.1) 0, transparent 50%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #020617;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Glass card effect */
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+}
+
+/* Glass button */
+.glass-button {
+  padding: 0.5rem 1rem;
+  background: #0284c7;
+  color: white;
+  border-radius: 0.5rem;
+  transition: background 0.3s, transform 0.1s;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.glass-button:hover {
+  background: #0ea5e9;
+}
+
+.glass-button:active {
+  transform: scale(0.95);
+}
+
+/* Nav link styles */
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: #94a3b8;
+  border-radius: 0.75rem;
+  transition: all 0.2s;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.nav-link:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-link.active {
+  color: white;
+  background: rgba(14, 165, 233, 0.2);
+  border-right: 4px solid #0ea5e9;
+}

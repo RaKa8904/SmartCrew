@@ -1,0 +1,77 @@
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+const getAllCrew = async (req, res) => {
+    try {
+        const crew = await prisma.crew.findMany({
+            include: { user: { select: { id: true, name: true, email: true, role: true } }, schedules: true }
+        });
+        res.json(crew);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+const getCrewDetails = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const crewMember = await prisma.crew.findUnique({
+            where: { id: parseInt(id) },
+            include: { user: { select: { id: true, name: true, email: true, role: true } }, schedules: { include: { flight: true } }, availability: true }
+        });
+        if (!crewMember) {
+            return res.status(404).json({ message: 'Crew member not found' });
+        }
+        res.json(crewMember);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+const updateCrew = async (req, res) => {
+    const { id } = req.params;
+    const { crewType, qualification, maxHoursPerWeek, status } = req.body;
+    try {
+        const crew = await prisma.crew.update({
+            where: { id: parseInt(id) },
+            data: {
+                crewType,
+                qualification,
+                maxHoursPerWeek: parseInt(maxHoursPerWeek),
+                status,
+            },
+        });
+        res.json(crew);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+const deleteCrew = async (req, res) => {
+    const { id } = req.params;
+    try {
+        await prisma.crew.delete({ where: { id: parseInt(id) } });
+        res.json({ message: 'Crew member deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+const updateAvailability = async (req, res) => {
+    const { id } = req.params;
+    const { availableDate, status } = req.body;
+    try {
+        const availability = await prisma.availability.create({
+            data: {
+                crewId: parseInt(id),
+                availableDate: new Date(availableDate),
+                status,
+            },
+        });
+        res.status(201).json(availability);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+module.exports = { getAllCrew, getCrewDetails, updateCrew, deleteCrew, updateAvailability };

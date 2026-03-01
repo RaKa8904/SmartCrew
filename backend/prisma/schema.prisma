@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int      @id @default(autoincrement())
+  name     String
+  email    String   @unique
+  password String
+  role     String   // admin, crew, scheduler
+  crew     Crew?
+  schedules Schedule[] @relation("AssignedBy")
+}
+
+model Crew {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @unique
+  user            User     @relation(fields: [userId], references: [id])
+  crewType        String   // pilot, cabin
+  qualification   String
+  maxHoursPerWeek Int      @default(40)
+  status          String   @default("active")
+  availability   Availability[]
+  schedules      Schedule[]
+}
+
+model Flight {
+  id            Int      @id @default(autoincrement())
+  flightNumber  String   @unique
+  origin        String
+  destination   String
+  departureTime DateTime
+  arrivalTime   DateTime
+  aircraftType  String
+  schedules     Schedule[]
+}
+
+model Availability {
+  id            Int      @id @default(autoincrement())
+  crewId        Int
+  crew          Crew     @relation(fields: [crewId], references: [id])
+  availableDate DateTime
+  status        String   // available, busy, off
+}
+
+model Schedule {
+  id           Int      @id @default(autoincrement())
+  flightId     Int
+  flight       Flight   @relation(fields: [flightId], references: [id])
+  crewId       Int
+  crew         Crew     @relation(fields: [crewId], references: [id])
+  assignedById Int
+  assignedBy   User     @relation("AssignedBy", fields: [assignedById], references: [id])
+  assignedDate DateTime @default(now())
+}
+
+model Rule {
+  id            Int    @id @default(autoincrement())
+  name          String @unique
+  value         Float
+  description   String?
+}
+
+model Report {
+  id        Int      @id @default(autoincrement())
+  type      String
+  content   Json
+  createdAt DateTime @default(now())
+}

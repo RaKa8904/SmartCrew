@@ -1,0 +1,65 @@
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+const getAllFlights = async (req, res) => {
+    try {
+        const flights = await prisma.flight.findMany({
+            include: { schedules: true }
+        });
+        res.json(flights);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+const createFlight = async (req, res) => {
+    const { flightNumber, origin, destination, departureTime, arrivalTime, aircraftType } = req.body;
+    try {
+        const flight = await prisma.flight.create({
+            data: {
+                flightNumber,
+                origin,
+                destination,
+                departureTime: new Date(departureTime),
+                arrivalTime: new Date(arrivalTime),
+                aircraftType,
+            },
+        });
+        res.status(201).json(flight);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+const updateFlight = async (req, res) => {
+    const { id } = req.params;
+    const { flightNumber, origin, destination, departureTime, arrivalTime, aircraftType } = req.body;
+    try {
+        const flight = await prisma.flight.update({
+            where: { id: parseInt(id) },
+            data: {
+                flightNumber,
+                origin,
+                destination,
+                departureTime: new Date(departureTime),
+                arrivalTime: new Date(arrivalTime),
+                aircraftType,
+            },
+        });
+        res.json(flight);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+const deleteFlight = async (req, res) => {
+    const { id } = req.params;
+    try {
+        await prisma.flight.delete({ where: { id: parseInt(id) } });
+        res.json({ message: 'Flight deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+module.exports = { getAllFlights, createFlight, updateFlight, deleteFlight };
