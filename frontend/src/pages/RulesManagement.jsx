@@ -1,72 +1,135 @@
-import React, { useEffect, useState } from 'react';
-import api from '../services/api';
-import { Settings, Save, AlertCircle, Clock, Calendar } from 'lucide-react';
+import React, { useState } from 'react';
+import { Settings, Save, AlertCircle, Clock, Calendar, Loader2, CheckCircle } from 'lucide-react';
+import { useRules } from '../context/RulesContext';
+
+const ICONS = [Clock, Calendar, Settings, AlertCircle];
 
 const RulesManagement = () => {
-    const [rules, setRules] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { rules, loading, error, updateRule } = useRules();
 
-    const fetchData = async () => {
+    // Local draft state — mirrors DB values but tracks unsaved edits
+    const [drafts, setDrafts] = useState({});
+    const [saving, setSaving] = useState(false);
+    const [saved, setSaved] = useState(false);
+    const [saveError, setSaveError] = useState('');
+
+    const getDraftValue = (rule) =>
+        drafts[rule.id] !== undefined ? drafts[rule.id] : rule.value;
+
+    const handleValueChange = (id, val) => {
+        setDrafts((prev) => ({ ...prev, [id]: val === '' ? '' : val }));
+        setSaved(false);
+        setSaveError('');
+    };
+
+    const handleSaveAll = async () => {
+        setSaving(true);
+        setSaved(false);
+        setSaveError('');
         try {
-            // For now, if no rules in DB, we'll show defaults or use a dedicated endpoint
-            const res = await api.get('/flights'); // Just to check connectivity
-            // Mocking rules as I haven't implemented a dedicated CRUD for them yet
-            setRules([
-                { id: 1, name: 'Max Daily Duty Hours', value: 12, unit: 'hrs', description: 'Maximum consecutive hours a crew member can work in 24h.' },
-                { id: 2, name: 'Min Rest Period', value: 10, unit: 'hrs', description: 'Minimum rest time required between duty periods.' },
-                { id: 3, name: 'Max Weekly Duty Hours', value: 40, unit: 'hrs', description: 'Maximum total duty hours allowed per week.' },
-                { id: 4, name: 'Min Crew Per Flight', value: 3, unit: 'pers', description: 'Minimum number of crew (pax + pilots) for standard flights.' },
-            ]);
+            for (const rule of rules) {
+                const draft = drafts[rule.id];
+                if (draft !== undefined && Number(draft) !== rule.value) {
+                    await updateRule(rule.id, Number(draft));
+                }
+            }
+            setDrafts({}); // Clear drafts — DB values take over
+            setSaved(true);
+            setTimeout(() => setSaved(false), 3000);
         } catch (err) {
-            console.error('Failed to fetch rules', err);
+            setSaveError(err?.response?.data?.message || 'Failed to save rules. Please try again.');
         } finally {
-            setLoading(false);
+            setSaving(false);
         }
     };
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-32">
+                <Loader2 className="animate-spin text-primary-500" size={40} />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">System Rules & Constraints</h1>
+                    <h1 className="text-3xl font-bold text-white tracking-tight">System Rules &amp; Constraints</h1>
                     <p className="text-slate-400 mt-1">Configure intelligent scheduling parameters</p>
                 </div>
-                <button className="glass-button flex items-center gap-2">
-                    <Save size={18} />
-                    Save All Changes
+                <button
+                    onClick={handleSaveAll}
+                    disabled={saving}
+                    className="glass-button flex items-center gap-2 disabled:opacity-50"
+                >
+                    {saving ? (
+                        <Loader2 size={18} className="animate-spin" />
+                    ) : saved ? (
+                        <CheckCircle size={18} className="text-emerald-400" />
+                    ) : (
+                        <Save size={18} />
+                    )}
+                    {saving ? 'Saving…' : saved ? 'Saved!' : 'Save All Changes'}
                 </button>
             </div>
 
+            {saveError && (
+                <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl px-5 py-4 text-sm flex items-center gap-3">
+                    <AlertCircle size={18} className="shrink-0" />
+                    {saveError}
+                </div>
+            )}
+
+            {error && (
+                <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl px-5 py-4 text-sm flex items-center gap-3">
+                    <AlertCircle size={18} className="shrink-0" />
+                    {error}
+                </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {rules.map((rule) => (
-                    <div key={rule.id} className="glass-card p-8 group hover:border-primary-500/30 transition-all">
-                        <div className="flex items-start justify-between mb-6">
-                            <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-primary-500 group-hover:scale-110 transition-transform">
-                                {rule.id === 1 ? <Clock size={24} /> : rule.id === 2 ? <Calendar size={24} /> : <AlertCircle size={24} />}
+                {rules.map((rule, idx) => {
+                    const Icon = ICONS[idx % ICONS.length];
+                    const currentVal = getDraftValue(rule);
+                    const isDirty = drafts[rule.id] !== undefined && Number(drafts[rule.id]) !== rule.value;
+
+                    return (
+                        <div
+                            key={rule.id}
+                            className={`glass-card p-8 group transition-all ${isDirty ? 'border-primary-500/40' : 'hover:border-primary-500/30'}`}
+                        >
+                            <div className="flex items-start justify-between mb-6">
+                                <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-primary-500 group-hover:scale-110 transition-transform">
+                                    <Icon size={24} />
+                                </div>
+                                <div className={`flex items-center gap-2 bg-slate-900 px-4 py-2 rounded-xl border transition-colors ${isDirty ? 'border-primary-500/50' : 'border-white/10 focus-within:border-primary-500/40'}`}>
+                                    <input
+                                        type="number"
+                                        value={currentVal}
+                                        onChange={(e) => handleValueChange(rule.id, e.target.value)}
+                                        min={0}
+                                        className="w-14 bg-transparent text-white font-bold text-right focus:outline-none"
+                                        title={`Edit ${rule.name}`}
+                                    />
+                                    <span className="text-xs font-bold text-slate-500 uppercase">{rule.unit}</span>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2 bg-slate-900 px-4 py-2 rounded-xl border border-white/5">
-                                <input
-                                    type="number"
-                                    defaultValue={rule.value}
-                                    className="w-12 bg-transparent text-white font-bold text-right focus:outline-none"
-                                />
-                                <span className="text-xs font-bold text-slate-500 uppercase">{rule.unit}</span>
+
+                            <h3 className="text-xl font-bold text-white mb-2">{rule.name}</h3>
+                            <p className="text-sm text-slate-400 leading-relaxed">{rule.description}</p>
+
+                            <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
+                                <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase ${isDirty ? 'text-amber-400 bg-amber-500/10' : 'text-emerald-500 bg-emerald-500/10'}`}>
+                                    {isDirty ? 'Unsaved Changes' : 'Active Constraint'}
+                                </span>
+                                <span className="text-xs text-slate-500">
+                                    DB value: <span className="text-white font-bold">{rule.value} {rule.unit}</span>
+                                </span>
                             </div>
                         </div>
-
-                        <h3 className="text-xl font-bold text-white mb-2">{rule.name}</h3>
-                        <p className="text-sm text-slate-400 leading-relaxed">{rule.description}</p>
-
-                        <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
-                            <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full uppercase">Active Constraint</span>
-                            <button className="text-primary-500 text-xs font-bold hover:underline">Advanced Settings</button>
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             <div className="glass-card p-8 bg-amber-500/5 border-amber-500/20">
@@ -77,6 +140,7 @@ const RulesManagement = () => {
                         <p className="text-slate-400 text-sm leading-relaxed">
                             Modifying these rules will trigger a re-validation of all existing schedules.
                             Any violations created by new rules will be flagged in the Conflict Viewer.
+                            Click <strong className="text-white">Save All Changes</strong> to persist your edits to the database.
                         </p>
                     </div>
                 </div>

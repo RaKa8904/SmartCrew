@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { RulesProvider } from './context/RulesContext';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -13,28 +14,37 @@ import RulesManagement from './pages/RulesManagement';
 import ReportsPage from './pages/ReportsPage';
 import ConflictViewer from './pages/ConflictViewer';
 import AvailabilityManagement from './pages/AvailabilityManagement';
+import LiveFlightBoard from './pages/LiveFlightBoard';
+import NotificationsPage from './pages/NotificationsPage';
 
 const PrivateRoute = ({ children, roles }) => {
     const { user, loading } = useAuth();
-
-    if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-primary-500 font-bold">Loading...</div>;
+    if (loading) return (
+        <div style={{ minHeight: '100vh', background: '#020617', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ textAlign: 'center' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '3px solid rgba(14,165,233,0.2)', borderTopColor: '#0ea5e9', animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
+                <p style={{ color: '#475569', fontSize: '13px', fontFamily: 'Space Mono, monospace', letterSpacing: '0.1em' }}>INITIALIZING...</p>
+            </div>
+        </div>
+    );
     if (!user) return <Navigate to="/login" />;
     if (roles && !roles.includes(user.role)) return <Navigate to="/" />;
-
     return children;
 };
 
 function App() {
     return (
-        <Router>
-            <AuthProvider>
+        <AuthProvider>
+            <Router>
                 <Routes>
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
 
                     <Route path="/" element={
                         <PrivateRoute>
-                            <Layout />
+                            <RulesProvider>
+                                <Layout />
+                            </RulesProvider>
                         </PrivateRoute>
                     }>
                         <Route index element={<Navigate to="/dashboard" />} />
@@ -46,10 +56,12 @@ function App() {
                         <Route path="generate" element={<SchedulerDashboard />} />
                         <Route path="conflicts" element={<ConflictViewer />} />
                         <Route path="availability" element={<AvailabilityManagement />} />
+                        <Route path="live-board" element={<LiveFlightBoard />} />
+                        <Route path="notifications" element={<NotificationsPage />} />
                     </Route>
                 </Routes>
-            </AuthProvider>
-        </Router>
+            </Router>
+        </AuthProvider>
     );
 }
 
@@ -62,3 +74,4 @@ const AuthRouteWrapper = () => {
 };
 
 export default App;
+

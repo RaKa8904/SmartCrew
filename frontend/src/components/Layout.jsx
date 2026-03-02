@@ -4,10 +4,14 @@ import Sidebar from './Sidebar';
 
 const Layout = () => {
     return (
-        <div className="flex h-screen overflow-hidden">
+        <div className="flex h-screen overflow-hidden" style={{ background: '#020617' }}>
+            {/* Global radar-grid background */}
+            <div className="radar-bg" />
+
             <Sidebar />
-            <main className="flex-1 overflow-auto ml-64 p-10 bg-slate-950">
-                <div className="max-w-7xl mx-auto h-full">
+
+            <main className="flex-1 overflow-auto ml-64 relative z-10">
+                <div className="max-w-screen-2xl mx-auto p-8">
                     <Outlet />
                 </div>
             </main>

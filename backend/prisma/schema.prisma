@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,13 +11,14 @@ datasource db {
 }
 
 model User {
-  id       Int      @id @default(autoincrement())
-  name     String
-  email    String   @unique
-  password String
-  role     String   // admin, crew, scheduler
-  crew     Crew?
-  schedules Schedule[] @relation("AssignedBy")
+  id            Int            @id @default(autoincrement())
+  name          String
+  email         String         @unique
+  password      String
+  role          String         // admin, crew, scheduler
+  crew          Crew?
+  schedules     Schedule[]     @relation("AssignedBy")
+  notifications Notification[]
 }
 
 model Crew {
@@ -43,6 +41,9 @@ model Flight {
   departureTime DateTime
   arrivalTime   DateTime
   aircraftType  String
+  status        String   @default("on-time") // on-time, delayed, cancelled
+  gate          String?
+  terminal      String?
   schedules     Schedule[]
 }
 
@@ -69,6 +70,7 @@ model Rule {
   id            Int    @id @default(autoincrement())
   name          String @unique
   value         Float
+  unit          String @default("hrs")
   description   String?
 }
 
@@ -76,5 +78,15 @@ model Report {
   id        Int      @id @default(autoincrement())
   type      String
   content   Json
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  message   String
+  type      String   @default("info") // info, warning, success, critical
+  isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 }
