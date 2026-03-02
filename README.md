@@ -1,6 +1,7 @@
 <div align="center">
 
-<img src="https://readme-typing-svg.demolab.com?font=Space+Mono&weight=700&size=28&pause=1000&color=0EA5E9&center=true&vCenter=true&width=600&lines=SmartCrew+✈️;Aviation+Operations+Center;AI-Powered+Crew+Scheduling" alt="SmartCrew" />
+# ✈️ SmartCrew
+### Aviation Operations Center — AI-Powered Crew Scheduling
 
 <br/>
 
@@ -16,10 +17,10 @@
 <p>
   <img src="https://img.shields.io/badge/License-MIT-f59e0b?style=flat-square" />
   <img src="https://img.shields.io/badge/Status-Active-10b981?style=flat-square" />
-  <img src="https://img.shields.io/badge/Project-Final%20Year%20AI%20%26%20DS-a78bfa?style=flat-square" />
+  <img src="https://img.shields.io/badge/Project-Final%20Year%20T.E.%20AI%20%26%20DS-a78bfa?style=flat-square" />
 </p>
 
-> **An AI-powered full-stack aviation crew scheduling system** — automating crew assignment, conflict detection, duty compliance, and flight operations management for airlines. Built as a Final Year B.E. AI & Data Science Project.
+> **An AI-powered full-stack aviation crew scheduling system** — automating crew assignment, conflict detection, duty compliance, and flight operations management for airlines. Built as a Final Year **T.E. AI & DS** Project.
 
 </div>
 
@@ -308,7 +309,7 @@ This project is licensed under the **MIT License** — see [LICENSE](./LICENSE) 
 
 <div align="center">
 
-**Built with ❤️ for Final Year B.E. AI & Data Science**
+**Built with ❤️ for Final Year T.E. AI & DS**
 
 <sub>SmartCrew · Aviation Operations Center · 2025–2026</sub>
 
