@@ -29,8 +29,12 @@ model Crew {
   qualification   String
   maxHoursPerWeek Int      @default(40)
   status          String   @default("active")
-  availability   Availability[]
-  schedules      Schedule[]
+  availability            Availability[]
+  schedules               Schedule[]
+  leaveRequests           LeaveRequest[]
+  swapRequestsAsRequestor ShiftSwapRequest[] @relation("SwapRequestor")
+  swapRequestsAsTarget    ShiftSwapRequest[] @relation("SwapTarget")
+  shiftBids               ShiftBid[]
 }
 
 model Flight {
@@ -45,6 +49,7 @@ model Flight {
   gate          String?
   terminal      String?
   schedules     Schedule[]
+  shiftBids     ShiftBid[]
 }
 
 model Availability {
@@ -64,6 +69,7 @@ model Schedule {
   assignedById Int
   assignedBy   User     @relation("AssignedBy", fields: [assignedById], references: [id])
   assignedDate DateTime @default(now())
+  swapRequests ShiftSwapRequest[]
 }
 
 model Rule {
@@ -89,4 +95,37 @@ model Notification {
   type      String   @default("info") // info, warning, success, critical
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+model LeaveRequest {
+  id        Int      @id @default(autoincrement())
+  crewId    Int
+  crew      Crew     @relation(fields: [crewId], references: [id])
+  startDate DateTime
+  endDate   DateTime
+  reason    String
+  status    String   @default("pending") // pending, approved, rejected
+  createdAt DateTime @default(now())
+}
+
+model ShiftSwapRequest {
+  id           Int      @id @default(autoincrement())
+  requestorId  Int
+  requestor    Crew     @relation("SwapRequestor", fields: [requestorId], references: [id])
+  targetCrewId Int?
+  targetCrew   Crew?    @relation("SwapTarget", fields: [targetCrewId], references: [id])
+  scheduleId   Int
+  schedule     Schedule @relation(fields: [scheduleId], references: [id])
+  status       String   @default("pending_peer") // pending_peer, pending_admin, approved, rejected
+  createdAt    DateTime @default(now())
+}
+
+model ShiftBid {
+  id           Int      @id @default(autoincrement())
+  flightId     Int
+  flight       Flight   @relation(fields: [flightId], references: [id])
+  crewId       Int
+  crew         Crew     @relation(fields: [crewId], references: [id])
+  status       String   @default("placed") // placed, won, lost
+  bidTimestamp DateTime @default(now())
 }

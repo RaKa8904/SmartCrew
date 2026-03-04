@@ -81,14 +81,37 @@ const updateAvailability = async (req, res) => {
     const { id } = req.params;
     const { availableDate, status } = req.body;
     try {
-        const availability = await prisma.availability.create({
-            data: {
+        const dateObj = new Date(availableDate);
+        // Normalize the date
+        const startOfDay = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+        const endOfDay = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), 23, 59, 59, 999);
+
+        const existing = await prisma.availability.findFirst({
+            where: {
                 crewId: parseInt(id),
-                availableDate: new Date(availableDate),
-                status,
-            },
+                availableDate: {
+                    gte: startOfDay,
+                    lte: endOfDay
+                }
+            }
         });
-        res.status(201).json(availability);
+
+        let availability;
+        if (existing) {
+            availability = await prisma.availability.update({
+                where: { id: existing.id },
+                data: { status }
+            });
+        } else {
+            availability = await prisma.availability.create({
+                data: {
+                    crewId: parseInt(id),
+                    availableDate: startOfDay,
+                    status,
+                },
+            });
+        }
+        res.status(200).json(availability);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }

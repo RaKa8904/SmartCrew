@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import {
     LayoutDashboard, Users, Plane, Settings, FileText,
     Calendar, Clock, LogOut, Radio, Bell, AlertTriangle,
-    ChevronRight, Zap
+    ChevronRight, Zap, Inbox
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
@@ -40,6 +40,7 @@ const Sidebar = () => {
         { to: '/dashboard', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
         { to: '/crew', icon: <Users size={18} />, label: 'Crew Management' },
         { to: '/flights', icon: <Plane size={18} />, label: 'Flight Operations' },
+        { to: '/inbox', icon: <Inbox size={18} />, label: 'Approval Inbox' },
         { to: '/live-board', icon: <Radio size={18} />, label: 'Live Flight Board' },
         { to: '/rules', icon: <Settings size={18} />, label: 'System Rules' },
         { to: '/reports', icon: <FileText size={18} />, label: 'Reports' },
@@ -47,8 +48,8 @@ const Sidebar = () => {
     ];
 
     const schedulerLinks = [
-        { to: '/dashboard', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
         { to: '/generate', icon: <Zap size={18} />, label: 'Auto Schedule' },
+        { to: '/inbox', icon: <Inbox size={18} />, label: 'Approval Inbox' },
         { to: '/live-board', icon: <Radio size={18} />, label: 'Live Flight Board' },
         { to: '/conflicts', icon: <AlertTriangle size={18} />, label: 'Conflict Viewer' },
         { to: '/notifications', icon: <Bell size={18} />, label: 'Notifications', badge: unreadCount },

@@ -28,6 +28,7 @@ const createFlight = async (req, res) => {
                 terminal: terminal || null,
             },
         });
+        if (req.io) req.io.emit('flight_created', flight);
         res.status(201).json(flight);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
@@ -80,6 +81,7 @@ const deleteFlight = async (req, res) => {
     const { id } = req.params;
     try {
         await prisma.flight.delete({ where: { id: parseInt(id) } });
+        if (req.io) req.io.emit('flight_deleted', parseInt(id));
         res.json({ message: 'Flight deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });

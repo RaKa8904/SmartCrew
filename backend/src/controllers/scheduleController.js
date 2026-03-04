@@ -3,6 +3,7 @@ const { generateSchedule, getConflicts } = require('../services/schedulingServic
 const triggerAutoGenerate = async (req, res) => {
     try {
         const result = await generateSchedule(req.user.id);
+        if (req.io) req.io.emit('schedule_generated', result);
         res.json({
             message: `Schedule generation complete. ${result.flightsScheduled} flights assigned crew.`,
             ...result,

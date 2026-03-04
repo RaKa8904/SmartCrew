@@ -16,6 +16,7 @@ import ConflictViewer from './pages/ConflictViewer';
 import AvailabilityManagement from './pages/AvailabilityManagement';
 import LiveFlightBoard from './pages/LiveFlightBoard';
 import NotificationsPage from './pages/NotificationsPage';
+import AdminInbox from './pages/AdminInbox';
 
 const PrivateRoute = ({ children, roles }) => {
     const { user, loading } = useAuth();
@@ -47,7 +48,7 @@ function App() {
                             </RulesProvider>
                         </PrivateRoute>
                     }>
-                        <Route index element={<Navigate to="/dashboard" />} />
+                        <Route index element={<AuthRouteWrapper />} />
                         <Route path="dashboard" element={<AuthRouteWrapper />} />
                         <Route path="flights" element={<FlightManagement />} />
                         <Route path="crew" element={<CrewManagement />} />
@@ -58,6 +59,7 @@ function App() {
                         <Route path="availability" element={<AvailabilityManagement />} />
                         <Route path="live-board" element={<LiveFlightBoard />} />
                         <Route path="notifications" element={<NotificationsPage />} />
+                        <Route path="inbox" element={<AdminInbox />} />
                     </Route>
                 </Routes>
             </Router>
@@ -68,7 +70,7 @@ function App() {
 const AuthRouteWrapper = () => {
     const { user } = useAuth();
     if (user?.role === 'admin') return <AdminDashboard />;
-    if (user?.role === 'scheduler') return <SchedulerDashboard />;
+    if (user?.role === 'scheduler') return <Navigate to="/generate" />;
     if (user?.role === 'crew') return <CrewDashboard />;
     return <Navigate to="/login" />;
 };

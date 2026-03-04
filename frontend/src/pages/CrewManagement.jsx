@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
-import { Users, Shield, Briefcase, Trash2, Edit, Loader2, CheckCircle, XCircle, X, Save } from 'lucide-react';
+import { Users, Shield, Briefcase, Trash2, Edit, Loader2, CheckCircle, XCircle, X, Save, UploadCloud, FileUp, AlertCircle } from 'lucide-react';
 
 const CREW_TYPES = ['pilot', 'cabin_crew'];
 const STATUSES = ['active', 'inactive'];
@@ -144,10 +144,172 @@ const EditModal = ({ member, onClose, onSaved }) => {
     );
 };
 
+const CSVUploadModal = ({ onClose, onSaved }) => {
+    const [file, setFile] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const [error, setError] = useState('');
+    const [result, setResult] = useState(null);
+
+    const handleFileChange = (e) => {
+        const selectedFile = e.target.files[0];
+        if (selectedFile) {
+            if (selectedFile.size > 2 * 1024 * 1024) {
+                setError('File size must not exceed 2MB.');
+                return;
+            }
+            if (selectedFile.type !== 'text/csv' && !selectedFile.name.endsWith('.csv')) {
+                setError('Only .csv files are allowed.');
+                return;
+            }
+            setError('');
+            setFile(selectedFile);
+            setResult(null);
+        }
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        const droppedFile = e.dataTransfer.files[0];
+        if (droppedFile) {
+            if (droppedFile.size > 2 * 1024 * 1024) {
+                setError('File size must not exceed 2MB.');
+                return;
+            }
+            if (droppedFile.type !== 'text/csv' && !droppedFile.name.endsWith('.csv')) {
+                setError('Only .csv files are allowed.');
+                return;
+            }
+            setError('');
+            setFile(droppedFile);
+            setResult(null);
+        }
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+    };
+
+    const handleUpload = async () => {
+        if (!file) return;
+        setUploading(true);
+        setError('');
+        setResult(null);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const res = await api.post('/admin/upload-crew-csv', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            setResult(res.data);
+            if (res.data.inserted > 0) {
+                onSaved(res.data.inserted, res.data.failed);
+            }
+        } catch (err) {
+            setError(err?.response?.data?.message || 'Failed to upload CSV. Please ensure you have Admin privileges.');
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="glass-card w-full max-w-lg p-8 relative shadow-2xl border border-white/10">
+                <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+                    <X size={20} />
+                </button>
+                <h2 className="text-xl font-bold text-white mb-1">Bulk Crew Upload (CSV)</h2>
+                <p className="text-slate-400 text-sm mb-6">Upload a .csv file to add multiple crew members at once.</p>
+
+                {error && (
+                    <div className="mb-5 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg px-4 py-3 text-sm flex items-center gap-2">
+                        <AlertCircle size={16} />
+                        {error}
+                    </div>
+                )}
+
+                {!result && (
+                    <div
+                        onDrop={handleDrop}
+                        onDragOver={handleDragOver}
+                        className="border-2 border-dashed border-white/20 rounded-xl p-8 text-center hover:border-primary-500/50 transition-colors bg-white/5 relative"
+                    >
+                        <input
+                            type="file"
+                            accept=".csv"
+                            onChange={handleFileChange}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="w-12 h-12 rounded-full bg-primary-500/20 flex items-center justify-center text-primary-400">
+                                <FileUp size={24} />
+                            </div>
+                            <div>
+                                <p className="text-sm font-semibold text-white">Drag & drop your CSV here</p>
+                                <p className="text-xs text-slate-400 mt-1">or click to browse from your computer</p>
+                            </div>
+                            <p className="text-[10px] text-slate-500 mt-2">Max 2MB. Columns: name, email, crew_type, qualification, max_hours_per_week, status</p>
+                        </div>
+                    </div>
+                )}
+
+                {file && !result && (
+                    <div className="mt-4 flex items-center justify-between bg-white/5 rounded-lg px-4 py-3 border border-white/10">
+                        <span className="text-sm text-slate-300 font-medium truncate pr-4">{file.name}</span>
+                        <span className="text-xs text-slate-500 shrink-0">{(file.size / 1024).toFixed(1)} KB</span>
+                    </div>
+                )}
+
+                {result && (
+                    <div className="bg-slate-900 border border-white/10 rounded-xl p-6 text-sm">
+                        <div className="flex items-center gap-2 text-emerald-400 mb-2 font-bold text-base">
+                            <CheckCircle size={18} /> Upload Complete
+                        </div>
+                        <ul className="space-y-1 text-slate-300 mb-4">
+                            <li>Total Rows: <span className="font-bold text-white">{result.total_rows}</span></li>
+                            <li>Successfully Added: <span className="font-bold text-emerald-400">{result.inserted}</span></li>
+                            <li>Failed: <span className="font-bold text-red-400">{result.failed}</span></li>
+                        </ul>
+                        {result.detailed_errors && result.detailed_errors.length > 0 && (
+                            <div className="mt-4 text-xs bg-red-500/10 p-4 rounded-lg border border-red-500/20 max-h-40 overflow-y-auto custom-scrollbar">
+                                <p className="font-bold text-red-400 mb-2 uppercase tracking-wider text-[10px]">Error Details:</p>
+                                <ul className="space-y-1 text-red-300">
+                                    {result.detailed_errors.map((e, idx) => (
+                                        <li key={idx}>Row {e.row}: {e.error}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                <div className="flex gap-3 mt-6">
+                    <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-lg border border-white/10 text-slate-300 text-sm font-semibold hover:bg-white/5 transition-colors">
+                        {result ? 'Close' : 'Cancel'}
+                    </button>
+                    {!result && (
+                        <button
+                            onClick={handleUpload}
+                            disabled={!file || uploading}
+                            className="flex-1 glass-button flex items-center justify-center gap-2 py-2.5 disabled:opacity-50"
+                        >
+                            {uploading ? <Loader2 size={16} className="animate-spin" /> : <UploadCloud size={16} />}
+                            {uploading ? 'Uploading…' : 'Upload CSV'}
+                        </button>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const CrewManagement = () => {
     const [crew, setCrew] = useState([]);
     const [loading, setLoading] = useState(true);
     const [editTarget, setEditTarget] = useState(null);
+    const [showUploadModal, setShowUploadModal] = useState(false);
+    const [toastMessage, setToastMessage] = useState(null);
 
     const fetchData = async () => {
         setLoading(true);
@@ -177,7 +339,29 @@ const CrewManagement = () => {
     };
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-8 animate-in fade-in duration-500 relative">
+            {toastMessage && (
+                <div className="absolute top-0 right-0 z-50 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-right">
+                    <CheckCircle size={16} />
+                    <span className="text-sm font-semibold">{toastMessage}</span>
+                    <button onClick={() => setToastMessage(null)} className="ml-2 text-emerald-400/50 hover:text-emerald-400">
+                        <X size={14} />
+                    </button>
+                </div>
+            )}
+
+            {showUploadModal && (
+                <CSVUploadModal
+                    onClose={() => setShowUploadModal(false)}
+                    onSaved={(inserted, failed) => {
+                        setToastMessage(`${inserted} Crew Member(s) Added Successfully.`);
+                        if (failed === 0) setShowUploadModal(false); // only close if no errors
+                        fetchData();
+                        setTimeout(() => setToastMessage(null), 5000);
+                    }}
+                />
+            )}
+
             {editTarget && (
                 <EditModal
                     member={editTarget}
@@ -195,6 +379,13 @@ const CrewManagement = () => {
                     <p className="text-slate-400 mt-1">Manage pilots and cabin crew profiles</p>
                 </div>
                 <div className="flex gap-4">
+                    <button
+                        onClick={() => setShowUploadModal(true)}
+                        className="glass-button flex items-center gap-2 px-4 py-2 text-sm"
+                    >
+                        <UploadCloud size={16} />
+                        Upload Crew CSV
+                    </button>
                     <div className="glass-card flex items-center gap-2 px-4 py-2 border-primary-500/20">
                         <Users className="text-primary-500" size={18} />
                         <span className="text-sm font-bold text-white">{crew.length} Active Crew</span>
