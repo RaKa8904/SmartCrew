@@ -63,6 +63,12 @@ A specialized visual workspace for Schedulers:
 - Drag-and-drop crew from the Available Pool directly onto upcoming Flight Cards.
 - Triggers instant recalculation and assignment validation.
 
+### 🌍 Real-World Flight Data Integration (Hybrid Engine)
+The system is capable of ingesting live tracking data rather than relying completely on simulations:
+- **Live FIDS Sync:** Instant integration with the **Aviationstack API** to ingest real-world, live domestic flights (e.g., DEL to BOM).
+- **Fallback Simulation:** Automatically generates realistic high-volume routing models if an API key is absent.
+- **Auto-Staffing Pipeline:** Wipes old dummy flights, pulls 60+ new tracking flights, and instantly fires the AI Scoring Engine to evaluate 80+ mock crew members and auto-staff every single real flight according to compliance rules.
+
 ### 📈 Advanced Analytics & Admin Dashboard
 Actionable operational intelligence:
 - **Fleet Delays (7-Day Forecast):** Rolling line chart tracking dispatch reliability.
@@ -116,7 +122,8 @@ SmartCrew/
 │       │   ├── emailService.js        # Nodemailer SMTP logic
 │       │   ├── socketService.js       # Live event broadcaster
 │       │   ├── reportingService.js    # Prisma Aggregation (Fatigue/Delays)
-│       │   └── schedulingService.js   # Constraints validation
+│       │   ├── schedulingService.js   # Constraints validation
+│       │   └── flightSyncService.js   # Live Aviationstack Tracking Sync
 │       └── index.js               # Node.js Server Boot
 │
 └── frontend/
@@ -166,6 +173,9 @@ PORT=5000
 SMTP_HOST=smtp.gmail.com
 SMTP_USER=your_email@gmail.com
 SMTP_PASS=your_app_password
+
+# Optional: For Live Real-World Flight Data Sync
+AVIATIONSTACK_API_KEY=your_api_key_here
 ```
 
 ### 3. Run Database Migrations & Seed
