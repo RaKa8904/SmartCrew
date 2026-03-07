@@ -43,7 +43,10 @@ const FlightCard = ({ flight, onDelete, onStatusChange }) => {
                 <div className="flex items-center justify-between mb-4">
                     <div>
                         <p className="fids-code text-3xl font-bold text-white">{flight.origin}</p>
-                        <p className="text-xs mt-1" style={{ color: '#64748b' }}>
+                        <p className="text-xs mt-1 font-medium" style={{ color: '#94a3b8' }}>
+                            {format(new Date(flight.departureTime), 'dd MMM yyyy')}
+                        </p>
+                        <p className="text-xs mt-0.5" style={{ color: '#64748b' }}>
                             {format(new Date(flight.departureTime), 'HH:mm')}
                         </p>
                     </div>
@@ -59,7 +62,10 @@ const FlightCard = ({ flight, onDelete, onStatusChange }) => {
 
                     <div className="text-right">
                         <p className="fids-code text-3xl font-bold text-white">{flight.destination}</p>
-                        <p className="text-xs mt-1" style={{ color: '#64748b' }}>
+                        <p className="text-xs mt-1 font-medium" style={{ color: '#94a3b8' }}>
+                            {format(new Date(flight.arrivalTime), 'dd MMM yyyy')}
+                        </p>
+                        <p className="text-xs mt-0.5" style={{ color: '#64748b' }}>
                             {format(new Date(flight.arrivalTime), 'HH:mm')}
                         </p>
                     </div>

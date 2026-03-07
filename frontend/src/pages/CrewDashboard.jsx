@@ -15,6 +15,8 @@ const CrewDashboard = () => {
     const [crewDetails, setCrewDetails] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('schedule');
+    const [leaveFilter, setLeaveFilter] = useState('active'); // 'active' or 'history'
+    const [swapFilter, setSwapFilter] = useState('active'); // 'active' or 'history'
 
     // Portal Data State
     const [leaves, setLeaves] = useState([]);
@@ -244,13 +246,27 @@ const CrewDashboard = () => {
                             </div>
 
                             <div className="glass-card">
-                                <div className="p-4 border-b border-white/5">
-                                    <h3 className="font-bold text-white text-sm uppercase tracking-wider">Leave History</h3>
+                                <div className="p-4 border-b border-white/5 flex justify-between items-center">
+                                    <h3 className="font-bold text-white text-sm uppercase tracking-wider">Leave Requests</h3>
+                                    <div className="flex bg-slate-900 rounded-lg p-1 border border-white/5">
+                                        <button 
+                                            onClick={() => setLeaveFilter('active')}
+                                            className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${leaveFilter === 'active' ? 'bg-primary-500/20 text-primary-400' : 'text-slate-500 hover:text-slate-300'}`}
+                                        >
+                                            Active
+                                        </button>
+                                        <button 
+                                            onClick={() => setLeaveFilter('history')}
+                                            className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${leaveFilter === 'history' ? 'bg-primary-500/20 text-primary-400' : 'text-slate-500 hover:text-slate-300'}`}
+                                        >
+                                            History
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="divide-y divide-white/5 max-h-80 overflow-y-auto custom-scrollbar">
-                                    {leaves.length === 0 ? (
-                                        <p className="p-4 text-slate-500 text-sm italic">No leave requests found.</p>
-                                    ) : leaves.map(l => (
+                                    {leaves.filter(l => leaveFilter === 'active' ? l.status === 'pending' : l.status !== 'pending').length === 0 ? (
+                                        <p className="p-4 text-slate-500 text-sm italic">No {leaveFilter} leave requests found.</p>
+                                    ) : leaves.filter(l => leaveFilter === 'active' ? l.status === 'pending' : l.status !== 'pending').map(l => (
                                         <div key={l.id} className="p-4 flex justify-between items-center group hover:bg-white/[0.02]">
                                             <div>
                                                 <p className="text-white text-sm font-semibold">{format(new Date(l.startDate), 'MMM dd')} - {format(new Date(l.endDate), 'MMM dd, yyyy')}</p>
@@ -274,11 +290,25 @@ const CrewDashboard = () => {
                                     <h3 className="font-bold text-white text-sm uppercase tracking-wider flex items-center gap-2">
                                         <Hand size={14} /> My Shift Bids
                                     </h3>
+                                    <div className="flex bg-slate-900 rounded-lg p-1 border border-white/5">
+                                        <button 
+                                            onClick={() => setSwapFilter('active')}
+                                            className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${swapFilter === 'active' ? 'bg-primary-500/20 text-primary-400' : 'text-slate-500 hover:text-slate-300'}`}
+                                        >
+                                            Active
+                                        </button>
+                                        <button 
+                                            onClick={() => setSwapFilter('history')}
+                                            className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${swapFilter === 'history' ? 'bg-primary-500/20 text-primary-400' : 'text-slate-500 hover:text-slate-300'}`}
+                                        >
+                                            History
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="divide-y divide-white/5 max-h-60 overflow-y-auto custom-scrollbar">
-                                    {bids.length === 0 ? (
-                                        <p className="p-4 text-slate-500 text-sm italic">No active bids.</p>
-                                    ) : bids.map(bid => (
+                                    {bids.filter(b => swapFilter === 'active' ? b.status === 'pending' : b.status !== 'pending').length === 0 ? (
+                                        <p className="p-4 text-slate-500 text-sm italic">No {swapFilter} bids found.</p>
+                                    ) : bids.filter(b => swapFilter === 'active' ? b.status === 'pending' : b.status !== 'pending').map(bid => (
                                         <div key={bid.id} className="p-4 flex items-center justify-between">
                                             <div>
                                                 <p className="text-white text-sm font-semibold flex items-center justify-start gap-2">
@@ -346,9 +376,9 @@ const CrewDashboard = () => {
                                     </h3>
                                 </div>
                                 <div className="divide-y divide-white/5">
-                                    {swaps.length === 0 ? (
-                                        <p className="p-4 text-slate-500 text-sm italic">No active swap requests.</p>
-                                    ) : swaps.map(swap => {
+                                    {swaps.filter(s => swapFilter === 'active' ? ['pending_peer', 'pending_admin'].includes(s.status) : ['approved', 'rejected', 'cancelled'].includes(s.status)).length === 0 ? (
+                                        <p className="p-4 text-slate-500 text-sm italic">No {swapFilter} swap requests.</p>
+                                    ) : swaps.filter(s => swapFilter === 'active' ? ['pending_peer', 'pending_admin'].includes(s.status) : ['approved', 'rejected', 'cancelled'].includes(s.status)).map(swap => {
                                         const isRequestor = swap.requestorId === crewDetails?.id;
                                         return (
                                             <div key={swap.id} className="p-4">
