@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { syncLiveFlights } = require('../services/flightSyncService');
 
 const getAllFlights = async (req, res) => {
     try {
@@ -96,4 +97,13 @@ const deleteFlight = async (req, res) => {
     }
 };
 
-module.exports = { getAllFlights, createFlight, updateFlight, patchFlight, deleteFlight };
+const triggerFlightSync = async (req, res) => {
+    try {
+        const result = await syncLiveFlights();
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json({ message: 'Sync failed', error: error.message });
+    }
+};
+
+module.exports = { getAllFlights, createFlight, updateFlight, patchFlight, deleteFlight, triggerFlightSync };

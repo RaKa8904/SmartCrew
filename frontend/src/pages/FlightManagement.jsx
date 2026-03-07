@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
-import { Plane, Plus, Trash2, MapPin, Clock, Loader2, Radio, Users, CheckCircle2, AlertTriangle, XCircle, UploadCloud, FileUp, CheckCircle, X, AlertCircle } from 'lucide-react';
+import { Plane, Plus, Trash2, MapPin, Clock, Loader2, Radio, Users, CheckCircle2, AlertTriangle, XCircle, UploadCloud, FileUp, CheckCircle, X, AlertCircle, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 
 const STATUS_META = {
@@ -263,6 +263,7 @@ const CSVUploadModal = ({ onClose, onSaved }) => {
 const FlightManagement = () => {
     const [flights, setFlights] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [syncing, setSyncing] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [toastMessage, setToastMessage] = useState(null);
@@ -279,6 +280,20 @@ const FlightManagement = () => {
         } catch (err) {
             console.error('Failed to fetch flights', err);
         } finally { setLoading(false); }
+    };
+
+    const handleSync = async () => {
+        if (!window.confirm('⚠️ WARNING: This will WIPE ALL current flights and schedules to prevent data corruption. Proceed with Live Data Sync?')) return;
+        setSyncing(true);
+        try {
+            const res = await api.post('/flights/sync');
+            setToastMessage(`✅ Success: ${res.data.count} live flights ingested!`);
+            fetchData();
+        } catch (err) {
+            alert('Live Sync failed. Refer to server logs.');
+        } finally {
+            setSyncing(false);
+        }
     };
 
     useEffect(() => { fetchData(); }, []);
@@ -349,6 +364,15 @@ const FlightManagement = () => {
                     <p className="mt-1" style={{ color: '#64748b' }}>Manage fleet routes and operational status</p>
                 </div>
                 <div className="flex gap-4 items-center">
+                    <button
+                        onClick={handleSync}
+                        disabled={syncing}
+                        className="glass-button flex items-center gap-2 px-4 py-2 text-sm disabled:opacity-50"
+                        style={{ background: 'rgba(16, 185, 129, 0.1)', borderColor: 'rgba(16, 185, 129, 0.3)', color: '#10b981' }}
+                    >
+                        <RefreshCw size={16} className={syncing ? "animate-spin" : ""} />
+                        Live FIDS Sync
+                    </button>
                     <button
                         onClick={() => setShowUploadModal(true)}
                         className="glass-button flex items-center gap-2 px-4 py-2 text-sm"

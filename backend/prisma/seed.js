@@ -66,7 +66,31 @@ async function main() {
     const c12 = await prisma.crew.create({ data: { userId: u12.id, crewType: 'cabin', qualification: 'Cabin Crew Junior', maxHoursPerWeek: 50, status: 'active' } });
     const c13 = await prisma.crew.create({ data: { userId: u13.id, crewType: 'cabin', qualification: 'Cabin Crew Junior', maxHoursPerWeek: 50, status: 'on-leave' } });
 
-    console.log('✅ Crew profiles created...');
+    // ─── MASSIVE CREW EXPANSION (70 ADDITIONAL CREW) ─────────────────────────
+    const additionalCrew = [];
+    for (let i = 14; i <= 83; i++) { // 20 pilots, 50 cabin
+        const isPilot = i <= 33;
+        const user = await prisma.user.create({
+            data: {
+                name: isPilot ? `Gen Pilot ${i}` : `Gen Cabin ${i}`,
+                email: isPilot ? `pilot${i}@airline.com` : `cabin${i}@airline.com`,
+                password: hashedPassword,
+                role: 'crew'
+            }
+        });
+        const crew = await prisma.crew.create({
+            data: {
+                userId: user.id,
+                crewType: isPilot ? 'pilot' : 'cabin',
+                qualification: isPilot ? (i % 2 === 0 ? 'A320 Captain' : 'B737 First Officer') : 'Flight Attendant',
+                maxHoursPerWeek: isPilot ? 45 : 50,
+                status: 'active'
+            }
+        });
+        additionalCrew.push(crew);
+    }
+
+    console.log(`✅ ${13 + additionalCrew.length} Crew profiles created...`);
 
     // ─── FLIGHTS ──────────────────────────────────────────────────────────────
     const flights = [
@@ -220,7 +244,7 @@ async function main() {
     const addDays = (date, days) => new Date(date.getTime() + days * 86400000);
 
     const availabilityData = [];
-    const allCrewIds = [c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13];
+    const allCrewIds = [c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, ...additionalCrew];
     const statusCycles = [
         ['available', 'available', 'off', 'available', 'available', 'available', 'off'],
         ['off', 'available', 'available', 'available', 'available', 'off', 'available'],
@@ -236,6 +260,10 @@ async function main() {
         ['off', 'off', 'off', 'available', 'available', 'available', 'available'],
         ['off', 'off', 'off', 'off', 'off', 'off', 'off'], // Elena on full leave
     ];
+
+    additionalCrew.forEach((_, idx) => {
+        statusCycles.push(statusCycles[idx % 12]); // Reuse healthy patterns
+    });
 
     allCrewIds.forEach((crew, ci) => {
         for (let d = 0; d < 14; d++) {
@@ -318,7 +346,7 @@ async function main() {
     // ─── SUMMARY ──────────────────────────────────────────────────────────────
     console.log('\n🎉 Database fully seeded with rich aviation data!\n');
     console.log('📋 Summary:');
-    console.log('  👤 16 Users (1 Admin, 2 Schedulers, 5 Pilots, 8 Cabin Crew)');
+    console.log(`  👤 ${16 + additionalCrew.length} Users (1 Admin, 2 Schedulers, ${5 + 20} Pilots, ${8 + 50} Cabin Crew)`);
     console.log('  ✈️  25 Flights (19 scheduled, 6 pending AI assignment)');
     console.log(`  📋 ${scheduleAssignments.length} Schedule assignments`);
     console.log(`  📅 ${availabilityData.length} Availability records`);

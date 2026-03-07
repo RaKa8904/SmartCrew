@@ -217,7 +217,7 @@ This project is licensed under the **MIT License** — see [LICENSE](./LICENSE) 
 
 <div align="center">
 
-**Built with ❤️ for Final Year T.E. AI & DS**
+**Built with ❤️ for T.E. AI & DS**
 
 <sub>SmartCrew · Aviation Operations Center · 2025–2026</sub>
 
