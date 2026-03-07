@@ -4,12 +4,13 @@ import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { CalendarDays, Plane, Bell, User } from 'lucide-react-native';
+import { CalendarDays, Plane, Bell, User, Hand } from 'lucide-react-native';
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import LoginScreen from './src/screens/LoginScreen';
 import ScheduleScreen from './src/screens/ScheduleScreen';
 import FlightsScreen from './src/screens/FlightsScreen';
+import RequestsScreen from './src/screens/RequestsScreen';
 import NotificationsScreen from './src/screens/NotificationsScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import { colors } from './src/theme';
@@ -20,6 +21,7 @@ const Tab = createBottomTabNavigator();
 const TAB_ICONS = {
   Schedule: CalendarDays,
   Flights: Plane,
+  Requests: Hand,
   Notifications: Bell,
   Profile: User,
 };
@@ -51,6 +53,7 @@ const CrewTabs = () => (
   >
     <Tab.Screen name="Schedule" component={ScheduleScreen} />
     <Tab.Screen name="Flights" component={FlightsScreen} />
+    <Tab.Screen name="Requests" component={RequestsScreen} />
     <Tab.Screen name="Notifications" component={NotificationsScreen} />
     <Tab.Screen name="Profile" component={ProfileScreen} />
   </Tab.Navigator>
