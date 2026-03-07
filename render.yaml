@@ -21,3 +21,18 @@ services:
         sync: false
       - key: SMTP_PASS
         sync: false
+
+  - type: web
+    name: smartcrew-dashboard
+    env: static
+    region: oregon
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://smartcrew-api.onrender.com/api
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
