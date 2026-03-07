@@ -27,6 +27,12 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// Request logger for debugging mobile connectivity
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - from ${req.ip}`);
+    next();
+});
+
 // Attach io to req for endpoints to emit events
 app.use((req, res, next) => {
     req.io = io;
@@ -52,8 +58,8 @@ app.get('/', (req, res) => {
     res.send('Crew Scheduling API is running');
 });
 
-server.listen(PORT, async () => {
-    console.log(`Server is running on port ${PORT}`);
+server.listen(PORT, '0.0.0.0', async () => {
+    console.log(`Server is running on port ${PORT} (bound to 0.0.0.0)`);
     // Auto-seed default scheduling rules if none exist yet
     await seedDefaultRules();
     // Start the background tracking service
