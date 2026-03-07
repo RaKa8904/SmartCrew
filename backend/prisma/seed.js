@@ -6,6 +6,9 @@ const prisma = new PrismaClient();
 async function main() {
     // Clear existing data in safe order to avoid FK violations
     await prisma.notification.deleteMany();
+    await prisma.shiftSwapRequest.deleteMany(); // Clear new dependencies
+    await prisma.leaveRequest.deleteMany();
+    await prisma.shiftBid.deleteMany();
     await prisma.schedule.deleteMany();
     await prisma.availability.deleteMany();
     await prisma.crew.deleteMany();
@@ -188,13 +191,21 @@ async function main() {
         { flightId: createdFlights[16].id, crewId: c8.id, assignedById: admin.id },
         { flightId: createdFlights[16].id, crewId: c10.id, assignedById: admin.id },
 
-        // UA1201 (SFO→NRT): F/O Marcus + Omar
+        // UA1201 (SFO→NRT) - March 15 11:00 to March 16 14:00
         { flightId: createdFlights[17].id, crewId: c3.id, assignedById: scheduler.id },
         { flightId: createdFlights[17].id, crewId: c11.id, assignedById: scheduler.id },
 
-        // MH1301 (KUL→LHR): Capt. Erikson + Sarah
+        // MH1301 (KUL→LHR)
         { flightId: createdFlights[18].id, crewId: c5.id, assignedById: admin.id },
         { flightId: createdFlights[18].id, crewId: c6.id, assignedById: admin.id },
+
+        // 🚨 INTENTIONAL CONFLICTS FOR TESTING 🚨
+        // EY1101 (AUH→MEL) departs March 15 08:15 to March 15 23:15
+        // Assigning c3 (F/O Marcus) and c11 (Omar) to EY1101, but they are already on UA1201 from SFO beginning Mar 15 11:00
+        { flightId: createdFlights[16].id, crewId: c3.id, assignedById: scheduler.id },
+        { flightId: createdFlights[16].id, crewId: c11.id, assignedById: scheduler.id },
+        // Assigning c5 (Capt Erikson) to both AF701 (Mar 13 10:30) and LH801 (Mar 13 13:00) which overlap completely
+        { flightId: createdFlights[12].id, crewId: c5.id, assignedById: admin.id },
     ];
 
     // Flights 19–24 (EK404, AA1401, SQ501, NH1501, EK550, WB1601) left UNSCHEDULED for demo

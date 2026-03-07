@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const { findBestCrew } = require('../algorithms/scheduling');
+const { sendEmail } = require('./emailService');
 const prisma = new PrismaClient();
 
 /**
@@ -158,9 +159,32 @@ const generateSchedule = async (actingUserId) => {
 
     // Save all at once, skipping duplicates (if flight already has this crew)
     if (newAssignments.length > 0) {
-        await prisma.schedule.createMany({
+        const createdSchedules = await prisma.schedule.createManyAndReturn({
             data: newAssignments,
             skipDuplicates: true,
+            include: { crew: { include: { user: true } }, flight: true }
+        });
+
+        // Fire off email notifications for all newly generated assignments
+        createdSchedules.forEach(schedule => {
+            if (schedule.crew?.user?.email) {
+                const flightTime = new Date(schedule.flight.departureTime).toLocaleString();
+                const emailHtml = `
+                    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                        <h2 style="color: #0ea5e9;">Auto-Schedule Assignment</h2>
+                        <p>Hello <strong>${schedule.crew.user.name}</strong>,</p>
+                        <p>The system has automatically assigned you to a new flight.</p>
+                        <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #0ea5e9; margin: 20px 0;">
+                            <p style="margin: 5px 0;"><strong>Flight Number:</strong> ${schedule.flight.flightNumber}</p>
+                            <p style="margin: 5px 0;"><strong>Route:</strong> ${schedule.flight.origin} ✈️ ${schedule.flight.destination}</p>
+                            <p style="margin: 5px 0;"><strong>Departure:</strong> ${flightTime}</p>
+                        </div>
+                        <p>Please log in to the SmartCrew portal to check your updated roster.</p>
+                        <p style="color: #64748b; font-size: 12px; margin-top: 30px;">This is an automated message from the Smart Flight Crew Scheduling System.</p>
+                    </div>
+                `;
+                sendEmail(schedule.crew.user.email, `Flight Assignment: ${schedule.flight.flightNumber}`, emailHtml);
+            }
         });
     }
 

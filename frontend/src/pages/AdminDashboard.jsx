@@ -8,7 +8,8 @@ import {
 } from 'lucide-react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-    ResponsiveContainer, PieChart, Pie, Cell, Legend
+    ResponsiveContainer, PieChart, Pie, Cell, Legend,
+    LineChart, Line, ScatterChart, Scatter, ZAxis
 } from 'recharts';
 
 const STATUS_COLORS = { 'on-time': '#10b981', delayed: '#f59e0b', cancelled: '#ef4444' };
@@ -37,17 +38,20 @@ const AdminDashboard = () => {
 
     const [stats, setStats] = useState({ totalFlights: 0, totalCrew: 0, scheduledFlights: 0, conflicts: 0 });
     const [utilizationData, setUtilizationData] = useState([]);
+    const [historicalDelays, setHistoricalDelays] = useState([]);
+    const [crewFatigue, setCrewFatigue] = useState([]);
     const [flights, setFlights] = useState([]);
     const [recentActivity, setRecentActivity] = useState([]);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [flightsRes, crewRes, conflictsRes, utilRes] = await Promise.all([
+                const [flightsRes, crewRes, conflictsRes, utilRes, advRes] = await Promise.all([
                     api.get('/flights'),
                     api.get('/crew'),
                     api.get('/schedules/conflicts'),
                     api.get('/reports/utilization'),
+                    api.get('/reports/advanced')
                 ]);
                 const allFlights = flightsRes.data;
                 setFlights(allFlights);
@@ -58,6 +62,8 @@ const AdminDashboard = () => {
                     conflicts: conflictsRes.data.length,
                 });
                 setUtilizationData(utilRes.data.slice(0, 6));
+                setHistoricalDelays(advRes.data.historicalDelays);
+                setCrewFatigue(advRes.data.crewFatigue);
                 // Recent activity from schedules
                 const recent = allFlights
                     .filter(f => f.schedules?.length > 0)
@@ -76,6 +82,22 @@ const AdminDashboard = () => {
         };
         fetchData();
     }, []);
+
+    const handleExportCSV = async () => {
+        try {
+            const res = await api.get('/reports/workload/download', { responseType: 'blob' });
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'workload_report.csv');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error) {
+            console.error('Failed to download CSV', error);
+            alert('Failed to export CSV');
+        }
+    };
 
     // Pie data for flight status
     const statusCount = flights.reduce((acc, f) => {
@@ -121,8 +143,8 @@ const AdminDashboard = () => {
                         style={{ background: 'rgba(14,165,233,0.1)', border: '1px solid rgba(14,165,233,0.2)', color: '#0ea5e9' }}>
                         <Radio size={16} /> Live Board
                     </button>
-                    <button className="glass-button flex items-center gap-2">
-                        <Download size={16} /> Export
+                    <button onClick={handleExportCSV} className="glass-button flex items-center gap-2">
+                        <Download size={16} /> Export CSV
                     </button>
                 </div>
             </div>
@@ -199,6 +221,52 @@ const AdminDashboard = () => {
                                 <Tooltip contentStyle={{ backgroundColor: '#020617', borderColor: 'rgba(14,165,233,0.2)', borderRadius: '12px', color: '#fff', fontSize: '12px' }} />
                                 <Legend iconType="circle" iconSize={8} formatter={(v) => <span style={{ color: '#94a3b8', fontSize: '11px' }}>{v}</span>} />
                             </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* Fleet Delays Line Chart */}
+                <div className="lg:col-span-2 glass-card p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="font-bold text-white flex items-center gap-2">
+                            <Activity size={18} style={{ color: '#ec4899' }} />
+                            Fleet Delays (7-Day Forecast)
+                        </h3>
+                        <span className="hud-label">ROLLING WINDOW</span>
+                    </div>
+                    <div className="h-56">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={historicalDelays} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(t) => t.substring(5)} />
+                                <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
+                                <Tooltip contentStyle={{ backgroundColor: '#020617', borderColor: 'rgba(236,72,153,0.2)', borderRadius: '12px', color: '#fff', fontSize: '12px' }} />
+                                <Line type="monotone" dataKey="totalFlights" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3, fill: '#3b82f6', strokeWidth: 0 }} name="Total Flights" />
+                                <Line type="monotone" dataKey="delayedFlights" stroke="#ec4899" strokeWidth={2} dot={{ r: 3, fill: '#ec4899', strokeWidth: 0 }} name="Delayed Flights" />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* Crew Fatigue Scatter Plot */}
+                <div className="glass-card p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="font-bold text-white flex items-center gap-2">
+                            <AlertTriangle size={18} style={{ color: '#ef4444' }} />
+                            Crew Fatigue Hotspots
+                        </h3>
+                        <span className="hud-label">HOURS vs ALERTS</span>
+                    </div>
+                    <div className="h-56">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <ScatterChart margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                                <XAxis type="number" dataKey="dutyHours" name="Duty Hours" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
+                                <YAxis type="number" dataKey="notifications" name="Alerts" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
+                                <ZAxis type="number" range={[50, 200]} />
+                                <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ backgroundColor: '#020617', borderColor: 'rgba(239,68,68,0.2)', borderRadius: '12px', color: '#fff', fontSize: '12px' }} />
+                                <Scatter name="Crew Fatigue" data={crewFatigue} fill="#ef4444" />
+                            </ScatterChart>
                         </ResponsiveContainer>
                     </div>
                 </div>

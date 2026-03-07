@@ -53,7 +53,7 @@ const ConflictViewer = () => {
                                 <div className="flex-1 space-y-6 w-full">
                                     <div>
                                         <h3 className="text-xl font-bold text-white mb-2">Duty Overlap Detected</h3>
-                                        <p className="text-slate-400 text-sm">Crew member <span className="text-white font-bold">{conflict.schedule.crew.user.name}</span> has overlapping flight assignments.</p>
+                                        <p className="text-slate-400 text-sm">Crew member <span className="text-white font-bold">{conflict.crewName}</span> has overlapping flight assignments.</p>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -61,37 +61,38 @@ const ConflictViewer = () => {
                                             <p className="text-xs font-bold text-primary-500 uppercase tracking-widest mb-3">Primary Flight</p>
                                             <div className="flex items-center gap-3">
                                                 <Plane size={16} className="text-slate-500" />
-                                                <span className="text-white font-bold">{conflict.schedule.flight.flightNumber}</span>
+                                                <span className="text-white font-bold">{conflict.flight1}</span>
                                             </div>
                                             <div className="flex items-center gap-3 mt-2">
                                                 <Clock size={16} className="text-slate-500" />
                                                 <span className="text-xs text-slate-400">
-                                                    {format(new Date(conflict.schedule.flight.departureTime), 'HH:mm')} - {format(new Date(conflict.schedule.flight.arrivalTime), 'HH:mm')}
+                                                    {format(new Date(conflict.departureTime1), 'MMM dd, HH:mm')}
                                                 </span>
                                             </div>
                                         </div>
 
-                                        {conflict.overlaps.map((overlap, j) => (
-                                            <div key={j} className="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
-                                                <p className="text-xs font-bold text-red-500 uppercase tracking-widest mb-3">Conflicting Flight</p>
-                                                <div className="flex items-center gap-3">
-                                                    <Plane size={16} className="text-slate-500" />
-                                                    <span className="text-white font-bold">{overlap.flight.flightNumber}</span>
-                                                </div>
-                                                <div className="flex items-center gap-3 mt-2">
-                                                    <Clock size={16} className="text-slate-500" />
-                                                    <span className="text-xs text-slate-400">
-                                                        {format(new Date(overlap.flight.departureTime), 'HH:mm')} - {format(new Date(overlap.flight.arrivalTime), 'HH:mm')}
-                                                    </span>
-                                                </div>
+                                        <div className="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
+                                            <p className="text-xs font-bold text-red-500 uppercase tracking-widest mb-3">Conflicting Flight(s)</p>
+                                            <div className="flex items-center gap-3">
+                                                <Plane size={16} className="text-slate-500" />
+                                                <span className="text-white font-bold">{conflict.flight2}</span>
                                             </div>
-                                        ))}
+                                            <div className="flex items-center gap-3 mt-2">
+                                                <Clock size={16} className="text-slate-500" />
+                                                <span className="text-xs text-slate-400">
+                                                    {conflict.departureTime2 ? format(new Date(conflict.departureTime2), 'MMM dd, HH:mm') : 'Unknown Time'}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div className="flex justify-end gap-3 pt-4">
                                         <button className="px-4 py-2 text-sm font-semibold text-slate-400 hover:text-white transition-colors">Ignore</button>
-                                        <button className="px-6 py-2 bg-primary-600 hover:bg-primary-500 text-white text-sm font-bold rounded-lg transition-all shadow-lg shadow-primary-500/20">
-                                            Reassign Crew
+                                        <button
+                                            onClick={() => window.location.href = '/generate'}
+                                            className="px-6 py-2 bg-primary-600 hover:bg-primary-500 text-white text-sm font-bold rounded-lg transition-all shadow-lg shadow-primary-500/20"
+                                        >
+                                            Go to Auto Schedule Board
                                         </button>
                                     </div>
                                 </div>

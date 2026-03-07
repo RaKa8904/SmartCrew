@@ -31,4 +31,54 @@ const convertToCSV = (data) => {
     return [headers, ...rows].join('\n');
 };
 
-module.exports = { generateWorkloadReport, convertToCSV };
+const getAdvancedAnalytics = async () => {
+    // 1. Historical Line Chart: Fleet Delays Over Time (Next 7 days rolling)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const nextWeek = new Date(today);
+    nextWeek.setDate(today.getDate() + 7);
+
+    const flights = await prisma.flight.findMany({
+        where: { departureTime: { gte: today, lte: nextWeek } },
+        orderBy: { departureTime: 'asc' }
+    });
+
+    const delaysByDay = {};
+    flights.forEach(f => {
+        const date = f.departureTime.toISOString().split('T')[0];
+        if (!delaysByDay[date]) {
+            delaysByDay[date] = { date, totalFlights: 0, delayedFlights: 0 };
+        }
+        delaysByDay[date].totalFlights++;
+        if (f.status === 'delayed') {
+            delaysByDay[date].delayedFlights++;
+        }
+    });
+    const historicalDelays = Object.values(delaysByDay);
+
+    // 2. Scatter Plot: Crew Duty Hours vs Notification Count (Fatigue Hotspots)
+    const crewData = await prisma.crew.findMany({
+        include: {
+            schedules: { include: { flight: true } },
+            user: { include: { notifications: true } }
+        }
+    });
+
+    const crewFatigue = crewData.map(c => {
+        const dutyHours = c.schedules.reduce((acc, s) => {
+            const arr = new Date(s.flight.arrivalTime);
+            const dep = new Date(s.flight.departureTime);
+            return acc + ((arr - dep) / 3600000);
+        }, 0);
+        return {
+            crewName: c.user.name,
+            dutyHours: parseFloat(dutyHours.toFixed(2)),
+            notifications: c.user.notifications.length,
+            crewType: c.crewType
+        };
+    });
+
+    return { historicalDelays, crewFatigue };
+};
+
+module.exports = { generateWorkloadReport, convertToCSV, getAdvancedAnalytics };

@@ -4,7 +4,15 @@ const prisma = new PrismaClient();
 const getAllFlights = async (req, res) => {
     try {
         const flights = await prisma.flight.findMany({
-            include: { schedules: true }
+            include: {
+                schedules: {
+                    include: {
+                        crew: {
+                            include: { user: true }
+                        }
+                    }
+                }
+            }
         });
         res.json(flights);
     } catch (error) {

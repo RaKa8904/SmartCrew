@@ -1,204 +1,328 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import {
-    Play, AlertCircle, RefreshCw, CheckCircle2, Clock,
-    Users, Plane, Zap, Radio, Calendar
+    Play, AlertCircle, RefreshCw, CheckCircle2,
+    Users, Plane, Zap, Calendar, UserPlus, FileWarning, Search, X
 } from 'lucide-react';
-import { format, isSameDay } from 'date-fns';
+import { format } from 'date-fns';
+import { DndContext, useDraggable, useDroppable, DragOverlay } from '@dnd-kit/core';
+
+// Draggable Crew Card
+const DraggableCrew = ({ crew, isDragged }) => {
+    const { attributes, listeners, setNodeRef, transform } = useDraggable({
+        id: `crew-${crew.id}`,
+        data: { crew }
+    });
+
+    const style = transform ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        zIndex: 50,
+        opacity: isDragged ? 0 : 1,
+    } : {};
+
+    return (
+        <div ref={setNodeRef} style={style} {...listeners} {...attributes}
+            className={`p-3 rounded-xl mb-3 cursor-grab hover:bg-slate-800/50 transition-colors border ${isDragged ? 'border-dashed border-slate-500' : 'border-slate-700/50 bg-slate-900/40'}`}>
+            <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                    {crew.user?.name?.[0]}
+                </div>
+                <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-white truncate">{crew.user?.name}</p>
+                    <p className="text-xs text-slate-400 truncate uppercase tracking-widest">{crew.crewType} • {crew.qualification}</p>
+                </div>
+            </div>
+            <div className="mt-2 pt-2 border-t border-slate-800 flex justify-between items-center">
+                <span className="text-xs text-slate-500">Scheduled:</span>
+                <span className={`text-xs font-bold ${crew.schedules?.length > 0 ? 'text-amber-400' : 'text-slate-400'}`}>{crew.schedules?.length || 0} flights</span>
+            </div>
+        </div>
+    );
+};
+
+// Droppable Flight Column — uses flight.schedules directly
+const DroppableFlight = ({ flight, onUnassign }) => {
+    const { isOver, setNodeRef } = useDroppable({
+        id: `flight-${flight.id}`,
+        data: { flight }
+    });
+
+    // flight.schedules already contains nested { crew: { user: {...} } }
+    const assignedCrew = flight.schedules || [];
+
+    return (
+        <div ref={setNodeRef} className={`glass-card p-4 min-w-[320px] transition-all ${isOver ? 'ring-2 ring-emerald-500 ring-offset-2 ring-offset-slate-950 bg-emerald-900/10' : ''}`}>
+            <div className="flex justify-between items-start mb-3">
+                <div>
+                    <span className="fids-code text-sm font-bold text-white">{flight.flightNumber}</span>
+                    <div className="flex items-center gap-1.5 mt-1">
+                        <span className="text-xs font-bold text-sky-400">{flight.origin}</span>
+                        <Plane size={10} className="text-slate-500" />
+                        <span className="text-xs font-bold text-sky-400">{flight.destination}</span>
+                    </div>
+                </div>
+                <div className="text-right">
+                    <p className="text-sm font-bold text-white">{format(new Date(flight.departureTime), 'HH:mm')}</p>
+                    <p className="text-xs text-slate-400">{flight.aircraftType}</p>
+                </div>
+            </div>
+
+            <div className="space-y-2 min-h-[80px] p-2 rounded-xl bg-slate-950/30 border border-dashed border-slate-800">
+                {assignedCrew.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-slate-500 pt-4 pb-2">
+                        <UserPlus size={16} className="mb-1 opacity-50" />
+                        <span className="text-xs font-medium">Drop Crew Here</span>
+                    </div>
+                ) : (
+                    assignedCrew.map((schedule, i) => {
+                        const userName = schedule.crew?.user?.name || 'Unknown';
+                        const userInitial = userName !== 'Unknown' ? userName.charAt(0) : '?';
+                        const crewType = schedule.crew?.crewType?.toUpperCase() || '';
+
+                        return (
+                            <div key={schedule.id || i} className="flex items-center justify-between p-2 rounded-lg bg-emerald-900/20 border border-emerald-500/20">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-bold">
+                                        {userInitial}
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-white line-clamp-1">{userName}</p>
+                                        <p className="text-[10px] text-emerald-400/70 uppercase">{crewType}</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => onUnassign(schedule.id)}
+                                    className="text-slate-500 hover:text-red-400 hover:bg-red-400/20 p-1 rounded transition-colors"
+                                >
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        );
+                    })
+                )}
+            </div>
+
+            <div className="mt-3 flex justify-between items-center">
+                <span className="text-xs text-slate-500 font-medium tracking-wide">CREW COUNT</span>
+                <span className="text-xs font-bold text-white bg-slate-800 px-2 py-0.5 rounded-full">{assignedCrew.length}</span>
+            </div>
+        </div>
+    );
+};
+
 
 const SchedulerDashboard = () => {
     const [flights, setFlights] = useState([]);
+    const [crew, setCrew] = useState([]);
     const [loading, setLoading] = useState(true);
     const [generating, setGenerating] = useState(false);
-    const [success, setSuccess] = useState('');
+    const [activeDragItem, setActiveDragItem] = useState(null);
+    const [filterDate, setFilterDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+    const [searchQuery, setSearchQuery] = useState('');
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await api.get('/flights');
-            setFlights(res.data);
+            const flightsRes = await api.get('/flights');
+            setFlights(flightsRes.data);
+
+            // Auto-snap the date filter to the first available flight date
+            // if the current filterDate has no flights scheduled
+            const rawFlights = flightsRes.data;
+            if (rawFlights.length > 0) {
+                const firstFlightDate = rawFlights[0].departureTime.slice(0, 10);
+                setFilterDate(firstFlightDate);
+            }
         } catch (err) {
             console.error('Failed to fetch flights', err);
-        } finally { setLoading(false); }
+            alert('API Error Fetching Flights: ' + (err.response?.data?.message || err.message));
+        }
+
+        try {
+            const crewRes = await api.get('/crew');
+            setCrew(crewRes.data);
+        } catch (err) {
+            console.error('Failed to fetch crew', err);
+            alert('API Error Fetching Crew: ' + (err.response?.data?.message || err.message));
+        }
+        setLoading(false);
     };
 
     useEffect(() => { fetchData(); }, []);
 
     const handleAutoGenerate = async () => {
         setGenerating(true);
-        setSuccess('');
         try {
             const res = await api.post('/schedules/generate');
             await fetchData();
-            setSuccess(
-                res.data.flightsScheduled > 0
-                    ? `✅ ${res.data.flightsScheduled} flights assigned crew (${res.data.assignmentsMade} assignments made)`
-                    : '⚠️ All flights already scheduled or no available crew found.'
-            );
-            setTimeout(() => setSuccess(''), 6000);
+            alert(`✅ ${res.data.flightsScheduled} flights assigned crew (${res.data.assignmentsMade} assignments made)`);
         } catch (err) {
             alert('Generation failed: ' + (err.response?.data?.message || 'Server error'));
         } finally { setGenerating(false); }
     };
 
-    const pending = flights.filter(f => f.schedules?.length === 0);
-    const scheduled = flights.filter(f => f.schedules?.length > 0);
-    const schedulePct = flights.length > 0 ? Math.round((scheduled.length / flights.length) * 100) : 0;
+    const handleDragStart = (event) => {
+        const { active } = event;
+        setActiveDragItem(active.data.current?.crew);
+    };
 
-    // Group by date
-    const groupedByDate = flights.reduce((acc, f) => {
-        const day = format(new Date(f.departureTime), 'yyyy-MM-dd');
-        if (!acc[day]) acc[day] = [];
-        acc[day].push(f);
-        return acc;
-    }, {});
+    const handleDragEnd = async (event) => {
+        const { active, over } = event;
+        setActiveDragItem(null);
+
+        if (!over) return;
+
+        const crewId = active.id.replace('crew-', '');
+        const flightId = over.id.replace('flight-', '');
+
+        try {
+            await api.post('/schedules/assign', { flightId, crewId });
+            await fetchData();
+        } catch (error) {
+            alert(error.response?.data?.message || 'Failed to assign crew');
+        }
+    };
+
+    const handleUnassign = async (scheduleId) => {
+        try {
+            await api.delete(`/schedules/assign/${scheduleId}`);
+            await fetchData();
+        } catch (error) {
+            console.error('Failed to unassign crew', error);
+        }
+    };
+
+    // Normalize filterDate to ensure it's in YYYY-MM-DD format
+    let normalizedFilterDate = filterDate;
+    if (filterDate && filterDate.match(/^\d{2}-\d{2}-\d{4}$/)) {
+        const [day, month, year] = filterDate.split('-');
+        normalizedFilterDate = `${year}-${month}-${day}`;
+    }
+
+    // Filter flights by selected date
+    const dayFlights = flights.filter(f => f.departureTime && f.departureTime.slice(0, 10) === normalizedFilterDate);
+
+    // Build a set of crewIds that are assigned to flights today (from flight.schedules)
+    const assignedCrewIdsToday = new Set();
+    dayFlights.forEach(f => {
+        (f.schedules || []).forEach(s => {
+            if (s.crewId) assignedCrewIdsToday.add(s.crewId);
+        });
+    });
+
+    const availableCrewForDay = crew.filter(c => {
+        if (c.status !== 'active') return false;
+        if (searchQuery && !c.user?.name?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+        // Hide crew already assigned to a flight today
+        if (assignedCrewIdsToday.has(c.id)) return false;
+        return true;
+    });
 
     return (
-        <div className="space-y-6 page-enter">
+        <div className="h-[calc(100vh-6rem)] flex flex-col page-enter">
             {/* Header */}
-            <div className="flex justify-between items-start">
+            <div className="flex justify-between items-start mb-6 shrink-0">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
-                        <Zap size={14} style={{ color: '#f59e0b' }} />
-                        <span className="hud-label">AUTO-SCHEDULING ENGINE</span>
+                        <Zap size={14} style={{ color: '#0ea5e9' }} />
+                        <span className="hud-label">INTERACTIVE SCHEDULER</span>
                     </div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">Scheduler Portal</h1>
-                    <p className="mt-1" style={{ color: '#64748b' }}>AI-assisted crew assignment & optimization</p>
+                    <h1 className="text-3xl font-bold text-white tracking-tight">Assignment Board</h1>
                 </div>
                 <div className="flex gap-3">
-                    <button onClick={fetchData}
-                        className="flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all"
-                        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', color: '#64748b' }}>
-                        <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-                    </button>
-                    <button onClick={handleAutoGenerate} disabled={generating} className="glass-button gap-2">
+                    <input
+                        type="date"
+                        value={filterDate}
+                        onChange={e => setFilterDate(e.target.value)}
+                        className="glass-input text-sm px-3 py-2! h-[42px] cursor-pointer"
+                    />
+                    <button onClick={handleAutoGenerate} disabled={generating} className="glass-button gap-2 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
                         {generating ? <RefreshCw size={16} className="animate-spin" /> : <Play size={16} />}
-                        {generating ? 'Processing...' : 'Auto-Generate Schedule'}
+                        Auto-Generate All
                     </button>
                 </div>
             </div>
 
-            {/* Success Toast */}
-            {success && (
-                <div className="flex items-center gap-3 p-4 rounded-xl"
-                    style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#34d399' }}>
-                    <CheckCircle2 size={18} />
-                    <span className="font-semibold">{success}</span>
-                </div>
-            )}
-
-            {/* Stats + Progress */}
-            <div className="grid grid-cols-3 gap-4">
-                <div className="glass-card p-5" style={{ borderColor: 'rgba(245,158,11,0.15)' }}>
-                    <div className="flex items-center gap-2 mb-2">
-                        <AlertCircle size={16} style={{ color: '#f59e0b' }} />
-                        <span className="hud-label">PENDING</span>
-                    </div>
-                    <p className="text-4xl font-bold text-white">{pending.length}</p>
-                    <p className="text-sm mt-1" style={{ color: '#64748b' }}>Await crew assignment</p>
-                </div>
-                <div className="glass-card p-5" style={{ borderColor: 'rgba(16,185,129,0.15)' }}>
-                    <div className="flex items-center gap-2 mb-2">
-                        <CheckCircle2 size={16} style={{ color: '#10b981' }} />
-                        <span className="hud-label">SCHEDULED</span>
-                    </div>
-                    <p className="text-4xl font-bold text-white">{scheduled.length}</p>
-                    <p className="text-sm mt-1" style={{ color: '#64748b' }}>Crew confirmed</p>
-                </div>
-                <div className="glass-card p-5">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Radio size={16} style={{ color: '#0ea5e9' }} />
-                        <span className="hud-label">COMPLETION</span>
-                    </div>
-                    <p className="text-4xl font-bold text-white">{schedulePct}%</p>
-                    <div className="mt-3 duty-bar">
-                        <div className="duty-bar-fill" style={{
-                            width: `${schedulePct}%`,
-                            background: schedulePct === 100 ? 'linear-gradient(90deg, #059669, #10b981)' :
-                                schedulePct > 60 ? 'linear-gradient(90deg, #0369a1, #0ea5e9)' :
-                                    'linear-gradient(90deg, #b45309, #f59e0b)'
-                        }} />
-                    </div>
-                </div>
-            </div>
-
-            {/* Flight Timeline by Date */}
-            <div className="glass-card overflow-hidden">
-                <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(14,165,233,0.08)' }}>
-                    <h3 className="font-bold text-white flex items-center gap-2">
-                        <Calendar size={18} style={{ color: '#0ea5e9' }} />
-                        Flight Schedule Timeline
-                    </h3>
-                    <span className="hud-label">{flights.length} TOTAL FLIGHTS</span>
-                </div>
-
-                <div className="overflow-x-auto">
-                    <table className="avio-table">
-                        <thead>
-                            <tr>
-                                <th>FLIGHT</th>
-                                <th>ROUTE</th>
-                                <th>DATE</th>
-                                <th>DEPARTURE</th>
-                                <th>AIRCRAFT</th>
-                                <th>CREW STATUS</th>
-                                <th className="text-right">CREW COUNT</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+            {/* DND Context area */}
+            <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                <div className="flex gap-6 flex-1 min-h-0">
+                    {/* Left Sidebar: Available Crew */}
+                    <div className="w-80 flex flex-col glass-card shrink-0">
+                        <div className="p-4 border-b border-slate-800/60 bg-slate-900/40 rounded-t-2xl">
+                            <h2 className="font-bold text-white flex items-center gap-2 text-sm mb-3">
+                                <Users size={16} className="text-sky-400" />
+                                Available Pool
+                                <span className="ml-auto bg-slate-800 text-xs px-2 py-0.5 rounded-full text-slate-300">{availableCrewForDay.length}</span>
+                            </h2>
+                            <div className="relative">
+                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                                <input
+                                    type="text"
+                                    placeholder="Search crew..."
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                    className="w-full bg-slate-950/50 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500/50"
+                                />
+                            </div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                             {loading ? (
-                                [...Array(8)].map((_, i) => (
-                                    <tr key={i}>
-                                        <td colSpan={7}><div className="skeleton h-6 rounded-lg" /></td>
-                                    </tr>
+                                <div className="space-y-3">
+                                    {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-16 rounded-xl skeleton" />)}
+                                </div>
+                            ) : availableCrewForDay.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center h-40 text-slate-500">
+                                    <FileWarning size={24} className="mb-2 opacity-30" />
+                                    <p className="text-sm">No available crew found</p>
+                                </div>
+                            ) : (
+                                availableCrewForDay.map(c => (
+                                    <DraggableCrew key={c.id} crew={c} isDragged={activeDragItem?.id === c.id} />
                                 ))
-                            ) : flights.map((flight) => (
-                                <tr key={flight.id}>
-                                    <td>
-                                        <span className="fids-code text-sm font-bold text-white">{flight.flightNumber}</span>
-                                        <p className="text-xs mt-0.5" style={{ color: '#475569' }}>{flight.status}</p>
-                                    </td>
-                                    <td>
-                                        <div className="flex items-center gap-2">
-                                            <span className="fids-code text-sm text-white">{flight.origin}</span>
-                                            <Plane size={12} className="rotate-90" style={{ color: '#0ea5e9' }} />
-                                            <span className="fids-code text-sm text-white">{flight.destination}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <p className="text-sm text-white">{format(new Date(flight.departureTime), 'MMM dd')}</p>
-                                    </td>
-                                    <td>
-                                        <p className="text-sm text-white font-medium">{format(new Date(flight.departureTime), 'HH:mm')}</p>
-                                    </td>
-                                    <td>
-                                        <p className="text-sm" style={{ color: '#94a3b8' }}>{flight.aircraftType}</p>
-                                    </td>
-                                    <td>
-                                        {flight.schedules?.length > 0 ? (
-                                            <div className="flex items-center gap-1.5 status-on-time status-badge w-fit">
-                                                <CheckCircle2 size={11} /> ASSIGNED
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center gap-1.5 status-delayed status-badge w-fit">
-                                                <AlertCircle size={11} /> PENDING
-                                            </div>
-                                        )}
-                                    </td>
-                                    <td className="text-right">
-                                        <div className="flex items-center justify-end gap-1.5">
-                                            <Users size={13} style={{ color: '#475569' }} />
-                                            <span className="text-sm font-bold" style={{ color: flight.schedules?.length > 0 ? '#34d399' : '#64748b' }}>
-                                                {flight.schedules?.length || 0}
-                                            </span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Right Area: Flight Columns */}
+                    <div className="flex-1 overflow-x-auto overflow-y-hidden custom-scrollbar pb-2">
+                        <div className="flex gap-4 h-full items-start">
+                            {loading ? (
+                                [1, 2, 3].map(i => <div key={i} className="min-w-[320px] h-64 skeleton rounded-2xl" />)
+                            ) : dayFlights.length === 0 ? (
+                                <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 border-2 border-dashed border-slate-800 rounded-2xl">
+                                    <Plane size={32} className="mb-3 opacity-20" />
+                                    <p className="text-sm">No flights scheduled for this date.</p>
+                                </div>
+                            ) : (
+                                dayFlights.map(flight =>
+                                    <DroppableFlight
+                                        key={flight.id}
+                                        flight={flight}
+                                        onUnassign={handleUnassign}
+                                    />
+                                )
+                            )}
+                        </div>
+                    </div>
                 </div>
-            </div>
+
+                {/* Drag Overlay */}
+                <DragOverlay dropAnimation={null}>
+                    {activeDragItem ? (
+                        <div className="p-3 rounded-xl bg-slate-800 border-2 border-sky-500 shadow-2xl shadow-sky-900/20 w-72 opacity-90 scale-105 rotate-2 cursor-grabbing">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-sky-500/20 text-sky-400 font-bold text-xs flex justify-center items-center">
+                                    {activeDragItem.user?.name?.[0]}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-white">{activeDragItem.user?.name}</p>
+                                    <p className="text-[10px] text-slate-400 uppercase tracking-wider">{activeDragItem.crewType}</p>
+                                </div>
+                            </div>
+                        </div>
+                    ) : null}
+                </DragOverlay>
+            </DndContext>
         </div>
     );
 };

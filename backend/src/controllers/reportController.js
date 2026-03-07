@@ -1,4 +1,4 @@
-const { generateWorkloadReport, convertToCSV } = require('../services/reportingService');
+const { generateWorkloadReport, convertToCSV, getAdvancedAnalytics: fetchAdvancedAnalytics } = require('../services/reportingService');
 
 const downloadWorkloadReport = async (req, res) => {
     try {
@@ -21,4 +21,13 @@ const getUtilizationStats = async (req, res) => {
     }
 };
 
-module.exports = { downloadWorkloadReport, getUtilizationStats };
+const getAdvancedAnalytics = async (req, res) => {
+    try {
+        const data = await fetchAdvancedAnalytics();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+module.exports = { downloadWorkloadReport, getUtilizationStats, getAdvancedAnalytics };
