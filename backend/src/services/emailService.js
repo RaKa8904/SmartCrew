@@ -1,4 +1,6 @@
 const nodemailer = require('nodemailer');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 const transporter = nodemailer.createTransport({
     // Using Ethereal Email for testing (or a provided SMTP)
@@ -12,6 +14,14 @@ const transporter = nodemailer.createTransport({
 
 const sendEmail = async (to, subject, htmlContent) => {
     try {
+        const emailRule = await prisma.rule.findUnique({
+            where: { name: 'Enable Email Notifications' }
+        });
+
+        if (emailRule && emailRule.value === 0) {
+            console.log(`🔇 Email to ${to} blocked by System Rule.`);
+            return false;
+        }
         if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
             console.warn('⚠️ SMTP credentials missing. Email not sent to:', to);
             return false;

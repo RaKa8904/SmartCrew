@@ -1,7 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, ActivityIndicator, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, RefreshControl, ActivityIndicator, TouchableOpacity, Modal, TextInput, Alert, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Hand, CalendarClock, Plus, X } from 'lucide-react-native';
+import { Hand, CalendarClock, Plus, X, Check } from 'lucide-react-native';
 import api from '../services/api';
 import { colors, fonts, spacing } from '../theme';
 
@@ -220,15 +219,31 @@ const RequestsScreen = () => {
                             </View>
                         ) : (
                             <View style={styles.form}>
-                                <Text style={styles.inputLabel}>Schedule ID to Swap</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="e.g. 15 (Check Schedule tab)"
-                                    placeholderTextColor={colors.textMuted}
-                                    keyboardType="numeric"
-                                    value={swapForm.scheduleId ? String(swapForm.scheduleId) : ''}
-                                    onChangeText={(t) => setSwapForm({ ...swapForm, scheduleId: t })}
-                                />
+                                <Text style={styles.inputLabel}>Select Flight to Swap</Text>
+                                <ScrollView style={{ maxHeight: 150, marginBottom: spacing.md }} showsVerticalScrollIndicator={false}>
+                                    {mySchedules.length === 0 ? (
+                                        <Text style={styles.emptyText}>No upcoming flights available to swap.</Text>
+                                    ) : (
+                                        mySchedules.map((sched) => (
+                                            <TouchableOpacity
+                                                key={sched.id}
+                                                style={[styles.schedSelect, swapForm.scheduleId === sched.id && styles.schedSelectActive]}
+                                                onPress={() => setSwapForm({ ...swapForm, scheduleId: sched.id })}
+                                            >
+                                                <View>
+                                                    <Text style={{ ...fonts.body, color: swapForm.scheduleId === sched.id ? colors.primary : colors.text }}>
+                                                        {sched.flight.flightNumber} ({sched.flight.origin} - {sched.flight.destination})
+                                                    </Text>
+                                                    <Text style={{ ...fonts.small, color: colors.textMuted }}>
+                                                        {new Date(sched.flight.departureTime).toLocaleDateString()}
+                                                    </Text>
+                                                </View>
+                                                {swapForm.scheduleId === sched.id && <Check size={16} color={colors.primary} />}
+                                            </TouchableOpacity>
+                                        ))
+                                    )}
+                                </ScrollView>
+
                                 <Text style={styles.inputLabel}>Target User ID (Optional - Leave blank for Open Board)</Text>
                                 <TextInput
                                     style={styles.input}
@@ -333,6 +348,14 @@ const styles = StyleSheet.create({
         alignItems: 'center', marginTop: spacing.sm,
     },
     submitButtonText: { color: '#fff', ...fonts.body, fontWeight: '700' },
+    schedSelect: {
+        padding: spacing.md, backgroundColor: colors.background,
+        borderRadius: 8, marginBottom: 8, borderWidth: 1, borderColor: colors.cardBorder,
+        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'
+    },
+    schedSelectActive: {
+        borderColor: colors.primary, backgroundColor: colors.primary + '10'
+    }
 });
 
 export default RequestsScreen;

@@ -165,6 +165,17 @@ const generateSchedule = async (actingUserId) => {
             include: { crew: { include: { user: true } }, flight: true }
         });
 
+        // Create in-app system notifications
+        const notificationsData = createdSchedules.map(schedule => ({
+            userId: schedule.crew.userId,
+            message: `You have been automatically assigned to flight ${schedule.flight.flightNumber} (${schedule.flight.origin} ✈️ ${schedule.flight.destination}) departing on ${new Date(schedule.flight.departureTime).toLocaleDateString()}.`,
+            type: 'info'
+        }));
+
+        if (notificationsData.length > 0) {
+            await prisma.notification.createMany({ data: notificationsData });
+        }
+
         // Fire off email notifications for all newly generated assignments
         createdSchedules.forEach(schedule => {
             if (schedule.crew?.user?.email) {

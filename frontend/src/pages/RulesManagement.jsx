@@ -104,15 +104,30 @@ const RulesManagement = () => {
                                     <Icon size={24} />
                                 </div>
                                 <div className={`flex items-center gap-2 bg-slate-900 px-4 py-2 rounded-xl border transition-colors ${isDirty ? 'border-primary-500/50' : 'border-white/10 focus-within:border-primary-500/40'}`}>
-                                    <input
-                                        type="number"
-                                        value={currentVal}
-                                        onChange={(e) => handleValueChange(rule.id, e.target.value)}
-                                        min={0}
-                                        className="w-14 bg-transparent text-white font-bold text-right focus:outline-none"
-                                        title={`Edit ${rule.name}`}
-                                    />
-                                    <span className="text-xs font-bold text-slate-500 uppercase">{rule.unit}</span>
+                                    {rule.unit === 'bool' ? (
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => handleValueChange(rule.id, currentVal === 1 ? 0 : 1)}
+                                                className={`relative w-12 h-6 rounded-full transition-colors ${currentVal === 1 ? 'bg-emerald-500' : 'bg-slate-700'}`}
+                                                title={`Toggle ${rule.name}`}
+                                            >
+                                                <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${currentVal === 1 ? 'translate-x-6' : 'translate-x-0'}`} />
+                                            </button>
+                                            <span className="text-white font-bold text-sm w-8">{currentVal === 1 ? 'ON' : 'OFF'}</span>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <input
+                                                type="number"
+                                                value={currentVal}
+                                                onChange={(e) => handleValueChange(rule.id, e.target.value)}
+                                                min={0}
+                                                className="w-14 bg-transparent text-white font-bold text-right focus:outline-none"
+                                                title={`Edit ${rule.name}`}
+                                            />
+                                            <span className="text-xs font-bold text-slate-500 uppercase">{rule.unit}</span>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
@@ -124,7 +139,9 @@ const RulesManagement = () => {
                                     {isDirty ? 'Unsaved Changes' : 'Active Constraint'}
                                 </span>
                                 <span className="text-xs text-slate-500">
-                                    DB value: <span className="text-white font-bold">{rule.value} {rule.unit}</span>
+                                    DB value: <span className="text-white font-bold">
+                                        {rule.unit === 'bool' ? (rule.value === 1 ? 'ON' : 'OFF') : `${rule.value} ${rule.unit}`}
+                                    </span>
                                 </span>
                             </div>
                         </div>

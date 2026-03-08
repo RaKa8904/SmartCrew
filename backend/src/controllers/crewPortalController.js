@@ -56,7 +56,17 @@ const processLeaveRequest = async (req, res) => {
         const { status } = req.body; // approved or rejected
         const leave = await prisma.leaveRequest.update({
             where: { id: parseInt(id) },
-            data: { status }
+            data: { status },
+            include: { crew: true }
+        });
+
+        // Notify the crew member
+        await prisma.notification.create({
+            data: {
+                userId: leave.crew.userId,
+                message: `Your leave request from ${leave.startDate.toLocaleDateString()} to ${leave.endDate.toLocaleDateString()} has been ${status}.`,
+                type: status === 'approved' ? 'success' : (status === 'rejected' ? 'critical' : 'info')
+            }
         });
 
         // If approved, ideally we should unassign schedules falling in this range, but keeping it simple for now
@@ -160,7 +170,10 @@ const processSwapRequest = async (req, res) => {
         const { id } = req.params;
         const { status, finalTargetUserId } = req.body; // finalTargetUserId if target was empty and admin assigns it
 
-        const swap = await prisma.shiftSwapRequest.findUnique({ where: { id: parseInt(id) } });
+        const swap = await prisma.shiftSwapRequest.findUnique({
+            where: { id: parseInt(id) },
+            include: { requestor: true, targetCrew: true }
+        });
 
         let updatedCrewId = swap.targetCrewId;
         if (finalTargetUserId && !updatedCrewId) {
@@ -177,6 +190,20 @@ const processSwapRequest = async (req, res) => {
                 prisma.shiftSwapRequest.update({
                     where: { id: swap.id },
                     data: { status: 'approved', targetCrewId: updatedCrewId }
+                }),
+                prisma.notification.create({
+                    data: {
+                        userId: swap.requestor.userId,
+                        message: `Your shift swap request has been approved and assigned.`,
+                        type: 'success'
+                    }
+                }),
+                prisma.notification.create({
+                    data: {
+                        userId: (swap.targetCrewId ? swap.targetCrew.userId : finalTargetUserId),
+                        message: `You have been assigned a new flight via a shift swap.`,
+                        type: 'info'
+                    }
                 })
             ]);
             return res.json({ message: 'Swap approved and schedule updated' });
@@ -186,6 +213,15 @@ const processSwapRequest = async (req, res) => {
             where: { id: swap.id },
             data: { status }
         });
+
+        await prisma.notification.create({
+            data: {
+                userId: swap.requestor.userId,
+                message: `Your shift swap request has been ${status}.`,
+                type: 'critical'
+            }
+        });
+
         res.json(rejSwap);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });

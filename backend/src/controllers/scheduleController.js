@@ -49,6 +49,15 @@ const assignSchedule = async (req, res) => {
             }
         });
 
+        // Create in-app notification
+        await prisma.notification.create({
+            data: {
+                userId: assignment.crew.userId,
+                message: `You have been manually assigned to flight ${assignment.flight.flightNumber} (${assignment.flight.origin} ✈️ ${assignment.flight.destination}) departing on ${new Date(assignment.flight.departureTime).toLocaleDateString()}.`,
+                type: 'info'
+            }
+        });
+
         // Send email notification to the assigned crew member
         if (assignment.crew?.user?.email) {
             const flightTime = new Date(assignment.flight.departureTime).toLocaleString();
@@ -85,9 +94,23 @@ const unassignSchedule = async (req, res) => {
         const { PrismaClient } = require('@prisma/client');
         const prisma = new PrismaClient();
 
-        await prisma.schedule.delete({
-            where: { id: parseInt(scheduleId) }
+        const schedule = await prisma.schedule.findUnique({
+            where: { id: parseInt(scheduleId) },
+            include: { crew: true, flight: true }
         });
+
+        if (schedule) {
+            await prisma.notification.create({
+                data: {
+                    userId: schedule.crew.userId,
+                    message: `You have been removed from flight ${schedule.flight.flightNumber} (${schedule.flight.origin} ✈️ ${schedule.flight.destination}).`,
+                    type: 'warning'
+                }
+            });
+            await prisma.schedule.delete({
+                where: { id: parseInt(scheduleId) }
+            });
+        }
 
         if (req.io) req.io.emit('schedule_generated', { message: 'Manual unassignment' });
 
