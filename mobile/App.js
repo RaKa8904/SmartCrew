@@ -13,17 +13,28 @@ import FlightsScreen from './src/screens/FlightsScreen';
 import RequestsScreen from './src/screens/RequestsScreen';
 import NotificationsScreen from './src/screens/NotificationsScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
+
+// Admin Screens
+import AdminDashboardScreen from './src/screens/AdminDashboardScreen';
+import AdminOperationsScreen from './src/screens/AdminOperationsScreen';
+import AdminCrewScreen from './src/screens/AdminCrewScreen';
 import { colors } from './src/theme';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const TAB_ICONS = {
+  // Crew
   Schedule: CalendarDays,
   Flights: Plane,
   Requests: Hand,
   Notifications: Bell,
   Profile: User,
+  // Admin
+  Dashboard: CalendarDays,
+  Operations: Plane,
+  Crew: User,
+  FIDS: Plane,
 };
 
 const CrewTabs = () => (
@@ -59,6 +70,39 @@ const CrewTabs = () => (
   </Tab.Navigator>
 );
 
+const AdminTabs = () => (
+  <Tab.Navigator
+    screenOptions={({ route }) => ({
+      headerShown: false,
+      tabBarStyle: {
+        backgroundColor: colors.surface,
+        borderTopColor: colors.cardBorder,
+        borderTopWidth: 1,
+        height: 65,
+        paddingBottom: 8,
+        paddingTop: 8,
+      },
+      tabBarActiveTintColor: colors.primary,
+      tabBarInactiveTintColor: colors.textMuted,
+      tabBarLabelStyle: {
+        fontSize: 10,
+        fontWeight: '600',
+        letterSpacing: 0.5,
+      },
+      tabBarIcon: ({ color, size }) => {
+        const IconComp = TAB_ICONS[route.name];
+        return <IconComp size={20} color={color} />;
+      },
+    })}
+  >
+    <Tab.Screen name="Dashboard" component={AdminDashboardScreen} />
+    <Tab.Screen name="Operations" component={AdminOperationsScreen} />
+    <Tab.Screen name="Crew" component={AdminCrewScreen} />
+    <Tab.Screen name="FIDS" component={FlightsScreen} />
+    <Tab.Screen name="Profile" component={ProfileScreen} />
+  </Tab.Navigator>
+);
+
 const AppNavigator = () => {
   const { user, loading } = useAuth();
 
@@ -70,11 +114,17 @@ const AppNavigator = () => {
     );
   }
 
+  const isAdmin = user?.role === 'admin' || user?.role === 'scheduler';
+
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
-          <Stack.Screen name="Main" component={CrewTabs} />
+          isAdmin ? (
+            <Stack.Screen name="Main" component={AdminTabs} />
+          ) : (
+            <Stack.Screen name="Main" component={CrewTabs} />
+          )
         ) : (
           <Stack.Screen name="Login" component={LoginScreen} />
         )}
