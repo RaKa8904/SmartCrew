@@ -24,7 +24,7 @@ const DraggableCrew = ({ crew, isDragged }) => {
         <div ref={setNodeRef} style={style} {...listeners} {...attributes}
             className={`p-3 rounded-xl mb-3 cursor-grab hover:bg-slate-800/50 transition-colors border ${isDragged ? 'border-dashed border-slate-500' : 'border-slate-700/50 bg-slate-900/40'}`}>
             <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center font-bold text-xs shrink-0">
                     {crew.user?.name?.[0]}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -51,23 +51,27 @@ const DroppableFlight = ({ flight, onUnassign }) => {
     const assignedCrew = flight.schedules || [];
 
     return (
-        <div ref={setNodeRef} className={`glass-card p-4 min-w-[320px] transition-all ${isOver ? 'ring-2 ring-emerald-500 ring-offset-2 ring-offset-slate-950 bg-emerald-900/10' : ''}`}>
-            <div className="flex justify-between items-start mb-3">
-                <div>
+        <div ref={setNodeRef} className={`glass-card p-4 w-full transition-all ${isOver ? 'ring-2 ring-emerald-500 ring-offset-2 ring-offset-slate-950 bg-emerald-900/10' : ''}`}>
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between mb-3">
+                <div className="min-w-0">
                     <span className="fids-code text-sm font-bold text-white">{flight.flightNumber}</span>
-                    <div className="flex items-center gap-1.5 mt-1">
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
                         <span className="text-xs font-bold text-sky-400">{flight.origin}</span>
                         <Plane size={10} className="text-slate-500" />
                         <span className="text-xs font-bold text-sky-400">{flight.destination}</span>
                     </div>
+                    <div className="mt-2 flex items-center gap-2 text-xs text-slate-400">
+                        <Calendar size={12} className="text-sky-400" />
+                        <span>{format(new Date(flight.departureTime), 'EEE, MMM d, yyyy')}</span>
+                    </div>
                 </div>
-                <div className="text-right">
-                    <p className="text-sm font-bold text-white">{format(new Date(flight.departureTime), 'HH:mm')}</p>
+                <div className="text-left md:text-right shrink-0">
+                    <p className="text-sm font-bold text-white">{format(new Date(flight.departureTime), 'HH:mm')} - {format(new Date(flight.arrivalTime), 'HH:mm')}</p>
                     <p className="text-xs text-slate-400">{flight.aircraftType}</p>
                 </div>
             </div>
 
-            <div className="space-y-2 min-h-[80px] p-2 rounded-xl bg-slate-950/30 border border-dashed border-slate-800">
+            <div className="space-y-2 min-h-20 p-2 rounded-xl bg-slate-950/30 border border-dashed border-slate-800">
                 {assignedCrew.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-slate-500 pt-4 pb-2">
                         <UserPlus size={16} className="mb-1 opacity-50" />
@@ -234,7 +238,7 @@ const SchedulerDashboard = () => {
                         type="date"
                         value={filterDate}
                         onChange={e => setFilterDate(e.target.value)}
-                        className="glass-input text-sm px-3 py-2! h-[42px] cursor-pointer"
+                        className="glass-input text-sm px-3 py-2! h-10.5 cursor-pointer"
                     />
                     <button onClick={handleAutoGenerate} disabled={generating} className="glass-button gap-2 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
                         {generating ? <RefreshCw size={16} className="animate-spin" /> : <Play size={16} />}
@@ -284,10 +288,10 @@ const SchedulerDashboard = () => {
                     </div>
 
                     {/* Right Area: Flight Columns */}
-                    <div className="flex-1 overflow-x-auto overflow-y-hidden custom-scrollbar pb-2">
-                        <div className="flex gap-4 h-full items-start">
+                    <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-2">
+                        <div className="flex flex-col gap-4 h-full items-stretch">
                             {loading ? (
-                                [1, 2, 3].map(i => <div key={i} className="min-w-[320px] h-64 skeleton rounded-2xl" />)
+                                [1, 2, 3].map(i => <div key={i} className="w-full h-64 skeleton rounded-2xl" />)
                             ) : dayFlights.length === 0 ? (
                                 <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 border-2 border-dashed border-slate-800 rounded-2xl">
                                     <Plane size={32} className="mb-3 opacity-20" />
