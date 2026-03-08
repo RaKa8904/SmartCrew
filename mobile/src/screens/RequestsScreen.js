@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, ActivityIndicator, TouchableOpacity, Modal, TextInput, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, RefreshControl, ActivityIndicator, TouchableOpacity, Modal, TextInput, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Hand, CalendarClock, Plus, X, Check } from 'lucide-react-native';
 import api from '../services/api';
@@ -178,7 +178,10 @@ const RequestsScreen = () => {
                 visible={modalVisible}
                 onRequestClose={() => setModalVisible(false)}
             >
-                <View style={styles.modalOverlay}>
+                <KeyboardAvoidingView 
+                    behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+                    style={styles.modalOverlay}
+                >
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
                             <Text style={styles.modalTitle}>New {activeTab === 'leave' ? 'Leave' : 'Swap'} Request</Text>
@@ -188,7 +191,7 @@ const RequestsScreen = () => {
                         </View>
 
                         {activeTab === 'leave' ? (
-                            <View style={styles.form}>
+                            <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator={false}>
                                 <Text style={styles.inputLabel}>Start Date (YYYY-MM-DD)</Text>
                                 <TextInput
                                     style={styles.input}
@@ -217,9 +220,9 @@ const RequestsScreen = () => {
                                 <TouchableOpacity style={styles.submitButton} onPress={handleSubmitLeave}>
                                     <Text style={styles.submitButtonText}>Submit Leave Request</Text>
                                 </TouchableOpacity>
-                            </View>
+                            </ScrollView>
                         ) : (
-                            <View style={styles.form}>
+                            <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator={false}>
                                 <Text style={styles.inputLabel}>Select Flight to Swap</Text>
                                 <ScrollView style={{ maxHeight: 150, marginBottom: spacing.md }} showsVerticalScrollIndicator={false}>
                                     {mySchedules.length === 0 ? (
@@ -258,10 +261,10 @@ const RequestsScreen = () => {
                                 <TouchableOpacity style={styles.submitButton} onPress={handleSubmitSwap}>
                                     <Text style={styles.submitButtonText}>Submit Swap Request</Text>
                                 </TouchableOpacity>
-                            </View>
+                            </ScrollView>
                         )}
                     </View>
-                </View>
+                </KeyboardAvoidingView>
             </Modal>
         </LinearGradient>
     );

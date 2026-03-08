@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-    View, Text, StyleSheet, FlatList, RefreshControl, ActivityIndicator
+    View, Text, StyleSheet, FlatList, RefreshControl, ActivityIndicator, ScrollView
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Radio, Plane } from 'lucide-react-native';
@@ -88,24 +88,28 @@ const FlightsScreen = () => {
                 </View>
             </View>
 
-            {/* Table Header */}
-            <View style={styles.tableHeader}>
-                <Text style={[styles.thText, { width: 8 }]}></Text>
-                <Text style={[styles.thText, { width: 50 }]}>TIME</Text>
-                <Text style={[styles.thText, { width: 60 }]}>FLIGHT</Text>
-                <Text style={[styles.thText, { flex: 1 }]}>ROUTE</Text>
-                <Text style={[styles.thText, { width: 70 }]}>STATUS</Text>
-                <Text style={[styles.thText, { width: 40 }]}>GATE</Text>
-            </View>
+            {/* Table Area */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
+                <View style={{ minWidth: '100%' }}>
+                    <View style={styles.tableHeader}>
+                        <Text style={[styles.thText, { width: 8 }]}></Text>
+                        <Text style={[styles.thText, { width: 50 }]}>TIME</Text>
+                        <Text style={[styles.thText, { width: 60 }]}>FLIGHT</Text>
+                        <Text style={[styles.thText, { width: 100 }]}>ROUTE</Text>
+                        <Text style={[styles.thText, { width: 70 }]}>STATUS</Text>
+                        <Text style={[styles.thText, { width: 40 }]}>GATE</Text>
+                    </View>
 
-            <FlatList
-                data={flights}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => <FlightRow flight={item} />}
-                contentContainerStyle={styles.listContent}
-                showsVerticalScrollIndicator={false}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />}
-            />
+                    <FlatList
+                        data={flights}
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={({ item }) => <FlightRow flight={item} />}
+                        contentContainerStyle={styles.listContent}
+                        showsVerticalScrollIndicator={false}
+                        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />}
+                    />
+                </View>
+            </ScrollView>
         </LinearGradient>
     );
 };
@@ -137,7 +141,7 @@ const styles = StyleSheet.create({
     statusDot: { width: 8, height: 8, borderRadius: 4 },
     cellTime: { width: 50, fontFamily: 'monospace', fontSize: 12, color: colors.textSecondary },
     cellFlight: { width: 60, fontFamily: 'monospace', fontSize: 13, fontWeight: '700', color: colors.primary },
-    routeCell: { flex: 1, flexDirection: 'row', alignItems: 'center' },
+    routeCell: { width: 100, flexDirection: 'row', alignItems: 'center' },
     cellIata: { fontFamily: 'monospace', fontSize: 13, fontWeight: '700', color: colors.text },
     cellStatus: { width: 70, fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
     cellGate: { width: 40, fontSize: 11, color: colors.textDim, textAlign: 'right' },
