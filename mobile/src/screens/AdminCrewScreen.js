@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, RefreshControl, Image, TouchableOpacity, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronRight, Search, X } from 'lucide-react-native';
-import { Alert, TextInput } from 'react-native';
+import { Alert, TextInput, ScrollView } from 'react-native';
 import api from '../services/api';
 import { colors } from '../theme';
 
@@ -10,6 +10,7 @@ const AdminCrewScreen = () => {
     const [crewList, setCrewList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCrew, setSelectedCrew] = useState(null);
 
     const fetchCrew = async () => {
         try {
@@ -67,7 +68,7 @@ const AdminCrewScreen = () => {
                     <View style={styles.actions}>
                         <TouchableOpacity
                             style={styles.viewProfileBtn}
-                            onPress={() => Alert.alert('Profile', `Opening profile for ${crewName}...`)}
+                            onPress={() => setSelectedCrew(item)}
                         >
                             <Text style={styles.viewProfileText}>View Profile</Text>
                             <ChevronRight size={16} color={colors.primary} />
@@ -111,6 +112,67 @@ const AdminCrewScreen = () => {
                 contentContainerStyle={styles.listContainer}
                 refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchCrew} tintColor={colors.primary} />}
             />
+
+            {/* Profile Modal Overlay */}
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={!!selectedCrew}
+                onRequestClose={() => setSelectedCrew(null)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        {selectedCrew && (() => {
+                            const pName = selectedCrew.user?.name || selectedCrew.name || 'Unknown';
+                            const pInitials = pName.split(' ').map(n => n.charAt(0)).slice(0, 2).join('').toUpperCase();
+                            return (
+                                <>
+                                    <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setSelectedCrew(null)}>
+                                        <X size={24} color={colors.textMuted} />
+                                    </TouchableOpacity>
+                                    <View style={styles.modalHeader}>
+                                        <View style={styles.modalAvatar}>
+                                            <Text style={styles.modalAvatarText}>{pInitials}</Text>
+                                        </View>
+                                        <Text style={styles.modalName}>{pName}</Text>
+                                        <Text style={styles.modalRole}>{selectedCrew.qualification || selectedCrew.role || 'Crew'}</Text>
+                                        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(selectedCrew.status) + '20' }]}>
+                                            <View style={[styles.statusDot, { backgroundColor: getStatusColor(selectedCrew.status) }]} />
+                                            <Text style={[styles.statusText, { color: getStatusColor(selectedCrew.status) }]}>
+                                                {selectedCrew.status ? selectedCrew.status.toUpperCase() : 'UNKNOWN'}
+                                            </Text>
+                                        </View>
+                                    </View>
+
+                                    <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+                                        <View style={styles.detailCard}>
+                                            <Text style={styles.detailLabel}>Email</Text>
+                                            <Text style={styles.detailValue}>{selectedCrew.user?.email || selectedCrew.email || 'N/A'}</Text>
+                                        </View>
+                                        <View style={styles.detailCard}>
+                                            <Text style={styles.detailLabel}>Crew ID</Text>
+                                            <Text style={styles.detailValue}>#{selectedCrew.id.toString().padStart(4, '0')}</Text>
+                                        </View>
+                                        <View style={styles.detailCard}>
+                                            <Text style={styles.detailLabel}>Max Hours / Week</Text>
+                                            <Text style={styles.detailValue}>{selectedCrew.maxHoursPerWeek || '40'} hrs</Text>
+                                        </View>
+                                        <View style={styles.detailCard}>
+                                            <Text style={styles.detailLabel}>Type Rating / Qual.</Text>
+                                            <Text style={styles.detailValue}>{selectedCrew.qualification || 'Standard'}</Text>
+                                        </View>
+                                    </ScrollView>
+
+                                    <TouchableOpacity style={styles.contactBtn} onPress={() => setSelectedCrew(null)}>
+                                        <Text style={styles.contactBtnText}>Close Profile</Text>
+                                    </TouchableOpacity>
+                                </>
+                            );
+                        })()}
+                    </View>
+                </View>
+            </Modal>
+
         </SafeAreaView>
     );
 };
@@ -233,6 +295,97 @@ const styles = StyleSheet.create({
         color: colors.primary,
         fontSize: 13,
         fontWeight: '600',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        justifyContent: 'flex-end',
+    },
+    modalContent: {
+        backgroundColor: colors.surface,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        padding: 24,
+        minHeight: '60%',
+    },
+    modalCloseBtn: {
+        position: 'absolute',
+        top: 20,
+        right: 20,
+        zIndex: 10,
+        padding: 4,
+    },
+    modalHeader: {
+        alignItems: 'center',
+        marginTop: 10,
+        marginBottom: 24,
+    },
+    modalAvatar: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: 'rgba(56, 189, 248, 0.2)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
+    },
+    modalAvatarText: {
+        fontSize: 32,
+        fontWeight: '700',
+        color: colors.primary,
+    },
+    modalName: {
+        fontSize: 24,
+        fontWeight: '800',
+        color: colors.text,
+        marginBottom: 4,
+    },
+    modalRole: {
+        fontSize: 15,
+        color: colors.textMuted,
+        marginBottom: 12,
+    },
+    statusBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 12,
+    },
+    modalBody: {
+        flex: 1,
+    },
+    detailCard: {
+        backgroundColor: colors.background,
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: colors.cardBorder,
+    },
+    detailLabel: {
+        fontSize: 12,
+        color: colors.textMuted,
+        textTransform: 'uppercase',
+        fontWeight: '600',
+        marginBottom: 4,
+    },
+    detailValue: {
+        fontSize: 15,
+        color: colors.text,
+        fontWeight: '500',
+    },
+    contactBtn: {
+        backgroundColor: colors.cardBorder,
+        paddingVertical: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        marginTop: 16,
+    },
+    contactBtnText: {
+        color: colors.text,
+        fontSize: 16,
+        fontWeight: '700',
     },
 });
 
