@@ -43,6 +43,11 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const registerPushToken = async () => {
+        if (Constants.appOwnership === 'expo') {
+            console.log('Push notifications are not supported in Expo Go. Skipping to prevent SDK 53 crash.');
+            return;
+        }
+
         let token;
         if (Platform.OS === 'android') {
             await Notifications.setNotificationChannelAsync('default', {
