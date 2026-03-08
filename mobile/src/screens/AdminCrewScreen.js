@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, RefreshControl, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FileText, Phone, Search } from 'lucide-react-native';
-import { Alert } from 'react-native';
+import { ChevronRight, Search, X } from 'lucide-react-native';
+import { Alert, TextInput } from 'react-native';
 import api from '../services/api';
 import { colors } from '../theme';
 
 const AdminCrewScreen = () => {
     const [crewList, setCrewList] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const fetchCrew = async () => {
         try {
@@ -64,11 +65,12 @@ const AdminCrewScreen = () => {
                         </View>
                     </View>
                     <View style={styles.actions}>
-                        <TouchableOpacity style={styles.actionBtn} onPress={() => Alert.alert('Call', `Calling ${crewName}...`)}>
-                            <Phone size={16} color={colors.textMuted} />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.actionBtn} onPress={() => Alert.alert('Documents', `Viewing documents for ${crewName}...`)}>
-                            <FileText size={16} color={colors.textMuted} />
+                        <TouchableOpacity
+                            style={styles.viewProfileBtn}
+                            onPress={() => Alert.alert('Profile', `Opening profile for ${crewName}...`)}
+                        >
+                            <Text style={styles.viewProfileText}>View Profile</Text>
+                            <ChevronRight size={16} color={colors.primary} />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -79,17 +81,31 @@ const AdminCrewScreen = () => {
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             <View style={styles.header}>
-                <View>
-                    <Text style={styles.title}>Crew Management</Text>
-                    <Text style={styles.subtitle}>Roster & Availability</Text>
-                </View>
-                <TouchableOpacity style={styles.searchBtn} onPress={() => Alert.alert('Search', 'Crew search functionality coming soon.')}>
-                    <Search size={20} color={colors.primary} />
-                </TouchableOpacity>
+                <Text style={styles.title}>Crew Management</Text>
+                <Text style={styles.subtitle}>Roster & Availability</Text>
+            </View>
+
+            <View style={styles.searchContainer}>
+                <Search size={20} color={colors.textMuted} style={styles.searchIcon} />
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search by name or qualification..."
+                    placeholderTextColor={colors.textMuted}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                />
+                {searchQuery.length > 0 && (
+                    <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearSearchBtn}>
+                        <X size={16} color={colors.textMuted} />
+                    </TouchableOpacity>
+                )}
             </View>
 
             <FlatList
-                data={crewList}
+                data={crewList.filter(c =>
+                    (c.user?.name || c.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    (c.qualification || c.role || '').toLowerCase().includes(searchQuery.toLowerCase())
+                )}
                 renderItem={renderItem}
                 keyExtractor={item => item.id.toString()}
                 contentContainerStyle={styles.listContainer}
@@ -105,12 +121,9 @@ const styles = StyleSheet.create({
         backgroundColor: colors.background,
     },
     header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
         paddingHorizontal: 20,
         paddingTop: 10,
-        paddingBottom: 20,
+        paddingBottom: 16,
     },
     title: {
         fontSize: 28,
@@ -123,13 +136,29 @@ const styles = StyleSheet.create({
         color: colors.textMuted,
         marginTop: 4,
     },
-    searchBtn: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(56, 189, 248, 0.1)',
+    searchContainer: {
+        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
+        backgroundColor: colors.surface,
+        marginHorizontal: 16,
+        marginBottom: 16,
+        paddingHorizontal: 12,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: colors.cardBorder,
+        height: 48,
+    },
+    searchIcon: {
+        marginRight: 8,
+    },
+    searchInput: {
+        flex: 1,
+        color: colors.text,
+        fontSize: 15,
+        height: '100%',
+    },
+    clearSearchBtn: {
+        padding: 4,
     },
     listContainer: {
         paddingHorizontal: 16,
@@ -191,17 +220,19 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: colors.text,
     },
-    actions: {
+    viewProfileBtn: {
         flexDirection: 'row',
-        gap: 8,
-    },
-    actionBtn: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
         alignItems: 'center',
-        justifyContent: 'center',
+        backgroundColor: colors.primary + '15',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 20,
+        gap: 4,
+    },
+    viewProfileText: {
+        color: colors.primary,
+        fontSize: 13,
+        fontWeight: '600',
     },
 });
 
