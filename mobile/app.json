@@ -29,7 +29,20 @@
     },
     "plugins": [
       "expo-asset",
-      "expo-font"
-    ]
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "3630a490-ff64-412c-94bb-7ce31d9721ae"
+      }
+    }
   }
 }
