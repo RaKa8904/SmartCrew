@@ -11,6 +11,7 @@ import {
     ResponsiveContainer, PieChart, Pie, Cell, Legend,
     LineChart, Line, ScatterChart, Scatter, ZAxis
 } from 'recharts';
+import FleetTrackerMap from '../components/dashboard/FleetTrackerMap';
 
 const STATUS_COLORS = { 'on-time': '#10b981', delayed: '#f59e0b', cancelled: '#ef4444' };
 const PIE_COLORS = ['#10b981', '#f59e0b', '#ef4444'];
@@ -166,6 +167,21 @@ const AdminDashboard = () => {
                         </h3>
                     </div>
                 ))}
+            </div>
+
+            {/* Live GPS Fleet Tracker */}
+            <div className="glass-card p-0 overflow-hidden" style={{ height: '400px' }}>
+                <div className="p-4 border-b border-slate-700/50 bg-slate-900/50 flex justify-between items-center isolate relative z-[1000]">
+                    <h3 className="font-bold text-white flex items-center gap-2">
+                        <Radio size={18} className="text-emerald-400" />
+                        Live Fleet Tracker
+                    </h3>
+                    <span className="hud-label tracking-widest text-[#10b981]">GPS ACTIVE</span>
+                </div>
+                {/* The map itself needs relative positioning and zIndex below the sticky popup layer to not override other layers incorrectly, Leaflet handles its own zIndex internally */}
+                <div style={{ height: 'calc(100% - 60px)', position: 'relative', zIndex: 1 }}>
+                    <FleetTrackerMap />
+                </div>
             </div>
 
             {/* Charts Row */}

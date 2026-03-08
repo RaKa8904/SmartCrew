@@ -14,6 +14,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const portalRoutes = require('./routes/crewPortalRoutes');
 const { seedDefaultRules } = require('./controllers/ruleController');
+const { startFleetTracker } = require('./services/fleetTrackerService');
 
 const app = express();
 const server = http.createServer(app);
@@ -55,4 +56,6 @@ server.listen(PORT, async () => {
     console.log(`Server is running on port ${PORT}`);
     // Auto-seed default scheduling rules if none exist yet
     await seedDefaultRules();
+    // Start the background tracking service
+    startFleetTracker(io);
 });
