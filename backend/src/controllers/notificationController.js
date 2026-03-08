@@ -65,4 +65,21 @@ const deleteNotification = async (req, res) => {
     }
 };
 
-module.exports = { getNotifications, getUnreadCount, markAsRead, markAllRead, deleteNotification };
+// POST /api/notifications/push-token
+const savePushToken = async (req, res) => {
+    try {
+        const { token } = req.body;
+        if (!token) return res.status(400).json({ message: 'Push token required' });
+
+        await prisma.user.update({
+            where: { id: req.user.id },
+            data: { expoPushToken: token }
+        });
+
+        res.json({ message: 'Push token saved successfully' });
+    } catch (err) {
+        res.status(500).json({ message: 'Failed to save push token', error: err.message });
+    }
+};
+
+module.exports = { getNotifications, getUnreadCount, markAsRead, markAllRead, deleteNotification, savePushToken };

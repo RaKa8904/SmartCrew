@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const { sendPushNotification } = require('../services/pushNotificationService');
 
 const prisma = new PrismaClient();
 
@@ -61,13 +62,15 @@ const processLeaveRequest = async (req, res) => {
         });
 
         // Notify the crew member
+        const msg = `Your leave request from ${leave.startDate.toLocaleDateString()} to ${leave.endDate.toLocaleDateString()} has been ${status}.`;
         await prisma.notification.create({
             data: {
                 userId: leave.crew.userId,
-                message: `Your leave request from ${leave.startDate.toLocaleDateString()} to ${leave.endDate.toLocaleDateString()} has been ${status}.`,
+                message: msg,
                 type: status === 'approved' ? 'success' : (status === 'rejected' ? 'critical' : 'info')
             }
         });
+        await sendPushNotification(leave.crew.userId, 'Leave Request Update', msg);
 
         // If approved, ideally we should unassign schedules falling in this range, but keeping it simple for now
         res.json(leave);
@@ -206,6 +209,8 @@ const processSwapRequest = async (req, res) => {
                     }
                 })
             ]);
+            await sendPushNotification(swap.requestor.userId, 'Shift Swap Approved', 'Your shift swap request has been approved and assigned.');
+            await sendPushNotification((swap.targetCrewId ? swap.targetCrew.userId : finalTargetUserId), 'New Flight Assignment', 'You have been assigned a new flight via a shift swap.');
             return res.json({ message: 'Swap approved and schedule updated' });
         }
 
@@ -214,13 +219,15 @@ const processSwapRequest = async (req, res) => {
             data: { status }
         });
 
+        const rejMsg = `Your shift swap request has been ${status}.`;
         await prisma.notification.create({
             data: {
                 userId: swap.requestor.userId,
-                message: `Your shift swap request has been ${status}.`,
+                message: rejMsg,
                 type: 'critical'
             }
         });
+        await sendPushNotification(swap.requestor.userId, 'Shift Swap Update', rejMsg);
 
         res.json(rejSwap);
     } catch (error) {

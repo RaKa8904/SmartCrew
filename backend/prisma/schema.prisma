@@ -16,6 +16,7 @@ model User {
   email         String         @unique
   password      String
   role          String         // admin, crew, scheduler
+  expoPushToken String?
   crew          Crew?
   schedules     Schedule[]     @relation("AssignedBy")
   notifications Notification[]

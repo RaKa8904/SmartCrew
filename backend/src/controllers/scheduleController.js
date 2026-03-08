@@ -1,5 +1,6 @@
 const { generateSchedule, getConflicts } = require('../services/schedulingService');
 const { sendEmail } = require('../services/emailService');
+const { sendPushNotification } = require('../services/pushNotificationService');
 
 const triggerAutoGenerate = async (req, res) => {
     try {
@@ -50,13 +51,15 @@ const assignSchedule = async (req, res) => {
         });
 
         // Create in-app notification
+        const msg = `You have been manually assigned to flight ${assignment.flight.flightNumber} (${assignment.flight.origin} ✈️ ${assignment.flight.destination}) departing on ${new Date(assignment.flight.departureTime).toLocaleDateString()}.`;
         await prisma.notification.create({
             data: {
                 userId: assignment.crew.userId,
-                message: `You have been manually assigned to flight ${assignment.flight.flightNumber} (${assignment.flight.origin} ✈️ ${assignment.flight.destination}) departing on ${new Date(assignment.flight.departureTime).toLocaleDateString()}.`,
+                message: msg,
                 type: 'info'
             }
         });
+        await sendPushNotification(assignment.crew.userId, 'New Flight Assignment', msg);
 
         // Send email notification to the assigned crew member
         if (assignment.crew?.user?.email) {
@@ -100,13 +103,15 @@ const unassignSchedule = async (req, res) => {
         });
 
         if (schedule) {
+            const rmMsg = `You have been removed from flight ${schedule.flight.flightNumber} (${schedule.flight.origin} ✈️ ${schedule.flight.destination}).`;
             await prisma.notification.create({
                 data: {
                     userId: schedule.crew.userId,
-                    message: `You have been removed from flight ${schedule.flight.flightNumber} (${schedule.flight.origin} ✈️ ${schedule.flight.destination}).`,
+                    message: rmMsg,
                     type: 'warning'
                 }
             });
+            await sendPushNotification(schedule.crew.userId, 'Schedule Update', rmMsg);
             await prisma.schedule.delete({
                 where: { id: parseInt(scheduleId) }
             });

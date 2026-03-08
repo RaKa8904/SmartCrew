@@ -7,12 +7,14 @@ const {
     markAsRead,
     markAllRead,
     deleteNotification,
+    savePushToken,
 } = require('../controllers/notificationController');
 
 router.use(authMiddleware);
 
 
 router.get('/', getNotifications);
+router.post('/push-token', savePushToken);
 router.get('/unread-count', getUnreadCount);
 router.patch('/mark-all-read', markAllRead);
 router.patch('/:id/read', markAsRead);
