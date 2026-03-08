@@ -23,7 +23,8 @@ const LoginScreen = () => {
         try {
             await login(email, password);
         } catch (err) {
-            Alert.alert('Login Failed', err.response?.data?.message || 'Invalid email or password.');
+            const errorMsg = err.response?.data?.message || 'Network error. Please check if your backend is running or if the IP address in api.js has changed.';
+            Alert.alert('Login Failed', errorMsg);
         } finally {
             setLoading(false);
         }

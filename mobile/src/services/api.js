@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Run `ipconfig` on Windows or `ifconfig` or `hostname -I` on Linux/mac 
 // to find your LAN IP (e.g., 192.168.1.X).
 // 'localhost' or '127.0.0.1' will NOT work on a physical Android device.
-const BASE_URL = 'http://192.168.0.104:5000/api'; // Your LAN IP
+const BASE_URL = 'http://192.168.0.106:5000/api'; // Your LAN IP
 
 const api = axios.create({
     baseURL: BASE_URL,
