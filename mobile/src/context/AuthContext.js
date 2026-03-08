@@ -6,13 +6,15 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import api from '../services/api';
 
-Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: false,
-    }),
-});
+if (Constants.appOwnership !== 'expo') {
+    Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+            shouldShowAlert: true,
+            shouldPlaySound: true,
+            shouldSetBadge: false,
+        }),
+    });
+}
 
 const AuthContext = createContext();
 
