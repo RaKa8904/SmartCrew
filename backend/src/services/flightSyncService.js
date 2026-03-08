@@ -21,6 +21,7 @@ const generateRealisticIndianFlights = () => {
     ];
 
     const flights = [];
+    const usedFlightNumbers = new Set();
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
     today.setDate(today.getDate() + 1); // start tomorrow
@@ -32,7 +33,16 @@ const generateRealisticIndianFlights = () => {
         for (let i = 0; i < 15; i++) {
             const airline = airlines[Math.floor(Math.random() * airlines.length)];
             const dest = destinations[Math.floor(Math.random() * destinations.length)];
-            const flightNumber = `${airline.code}${Math.floor(Math.random() * 900) + 100}`;
+
+            // Generate a unique flight number to avoid P2002 constraint violations
+            let flightNumber;
+            let attempts = 0;
+            do {
+                flightNumber = `${airline.code}${Math.floor(Math.random() * 900) + 100}`;
+                attempts++;
+            } while (usedFlightNumbers.has(flightNumber) && attempts < 50);
+            if (usedFlightNumbers.has(flightNumber)) continue; // skip if truly stuck
+            usedFlightNumbers.add(flightNumber);
 
             // Random departure time between 05:00 and 22:00
             const hour = Math.floor(Math.random() * 17) + 5;
@@ -107,7 +117,11 @@ const syncLiveFlights = async () => {
 
         const createdFlights = [];
         for (const f of flightsData) {
-            const flight = await prisma.flight.create({ data: f });
+            const flight = await prisma.flight.upsert({
+                where: { flightNumber: f.flightNumber },
+                update: f,
+                create: f,
+            });
             createdFlights.push(flight);
         }
 
