@@ -1,12 +1,12 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import api from '../services/api';
 
 if (Constants.appOwnership !== 'expo') {
+    const Notifications = require('expo-notifications');
     Notifications.setNotificationHandler({
         handleNotification: async () => ({
             shouldShowAlert: true,
@@ -50,6 +50,7 @@ export const AuthProvider = ({ children }) => {
             return;
         }
 
+        const Notifications = require('expo-notifications');
         let token;
         if (Platform.OS === 'android') {
             await Notifications.setNotificationChannelAsync('default', {
