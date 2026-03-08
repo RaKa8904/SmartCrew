@@ -44,31 +44,36 @@ const AdminCrewScreen = () => {
         return colors.textMuted;
     };
 
-    const renderItem = ({ item }) => (
-        <View style={styles.card}>
-            <View style={styles.cardContent}>
-                <View style={styles.avatarPlaceholder}>
-                    <Text style={styles.avatarText}>{item.name.charAt(0)}{item.name.split(' ')[1] ? item.name.split(' ')[1].charAt(0) : ''}</Text>
-                </View>
-                <View style={styles.info}>
-                    <Text style={styles.name}>{item.name}</Text>
-                    <Text style={styles.role}>{item.qualification}</Text>
-                    <View style={styles.statusRow}>
-                        <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
-                        <Text style={styles.statusText}>{item.status}</Text>
+    const renderItem = ({ item }) => {
+        const crewName = item.user?.name || item.name || 'Unknown';
+        const initials = crewName.split(' ').map(n => n.charAt(0)).slice(0, 2).join('').toUpperCase();
+
+        return (
+            <View style={styles.card}>
+                <View style={styles.cardContent}>
+                    <View style={styles.avatarPlaceholder}>
+                        <Text style={styles.avatarText}>{initials}</Text>
+                    </View>
+                    <View style={styles.info}>
+                        <Text style={styles.name}>{crewName}</Text>
+                        <Text style={styles.role}>{item.qualification || item.role || 'Crew'}</Text>
+                        <View style={styles.statusRow}>
+                            <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
+                            <Text style={styles.statusText}>{item.status ? item.status.toUpperCase() : 'UNKNOWN'}</Text>
+                        </View>
+                    </View>
+                    <View style={styles.actions}>
+                        <TouchableOpacity style={styles.actionBtn}>
+                            <Phone size={16} color={colors.textMuted} />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.actionBtn}>
+                            <FileText size={16} color={colors.textMuted} />
+                        </TouchableOpacity>
                     </View>
                 </View>
-                <View style={styles.actions}>
-                    <TouchableOpacity style={styles.actionBtn}>
-                        <Phone size={16} color={colors.textMuted} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.actionBtn}>
-                        <FileText size={16} color={colors.textMuted} />
-                    </TouchableOpacity>
-                </View>
             </View>
-        </View>
-    );
+        );
+    };
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
