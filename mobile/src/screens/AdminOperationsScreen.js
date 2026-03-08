@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Settings2, Filter, AlertCircle, CheckCircle, Clock } from 'lucide-react-native';
+import { Alert } from 'react-native';
 import api from '../services/api';
 import { colors } from '../theme';
 
@@ -86,7 +87,7 @@ const AdminOperationsScreen = () => {
                     <Text style={styles.title}>Flight Operations</Text>
                     <Text style={styles.subtitle}>Active Network Status</Text>
                 </View>
-                <TouchableOpacity style={styles.filterBtn}>
+                <TouchableOpacity style={styles.filterBtn} onPress={() => Alert.alert('Filter', 'Flight filtering options coming soon.')}>
                     <Filter size={20} color={colors.primary} />
                 </TouchableOpacity>
             </View>

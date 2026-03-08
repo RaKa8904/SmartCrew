@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, RefreshControl, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FileText, Phone, Search } from 'lucide-react-native';
+import { Alert } from 'react-native';
 import api from '../services/api';
 import { colors } from '../theme';
 
@@ -63,10 +64,10 @@ const AdminCrewScreen = () => {
                         </View>
                     </View>
                     <View style={styles.actions}>
-                        <TouchableOpacity style={styles.actionBtn}>
+                        <TouchableOpacity style={styles.actionBtn} onPress={() => Alert.alert('Call', `Calling ${crewName}...`)}>
                             <Phone size={16} color={colors.textMuted} />
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.actionBtn}>
+                        <TouchableOpacity style={styles.actionBtn} onPress={() => Alert.alert('Documents', `Viewing documents for ${crewName}...`)}>
                             <FileText size={16} color={colors.textMuted} />
                         </TouchableOpacity>
                     </View>
@@ -82,7 +83,7 @@ const AdminCrewScreen = () => {
                     <Text style={styles.title}>Crew Management</Text>
                     <Text style={styles.subtitle}>Roster & Availability</Text>
                 </View>
-                <TouchableOpacity style={styles.searchBtn}>
+                <TouchableOpacity style={styles.searchBtn} onPress={() => Alert.alert('Search', 'Crew search functionality coming soon.')}>
                     <Search size={20} color={colors.primary} />
                 </TouchableOpacity>
             </View>
