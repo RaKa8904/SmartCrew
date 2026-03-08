@@ -101,11 +101,12 @@ const LoginPage = () => {
                         <div>
                             <label className="block text-xs font-semibold mb-2 hud-label">EMAIL ADDRESS</label>
                             <div className="relative">
-                                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2" size={16} style={{ color: '#334155' }} />
+                                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 z-10" size={16} style={{ color: '#334155' }} />
                                 <input
                                     type="email" value={email}
                                     onChange={e => setEmail(e.target.value)}
-                                    className="avio-input pl-10"
+                                    className="avio-input leading-tight"
+                                    style={{ paddingLeft: '2.75rem' }}
                                     placeholder="name@airline.com" required
                                 />
                             </div>
@@ -114,11 +115,12 @@ const LoginPage = () => {
                         <div>
                             <label className="block text-xs font-semibold mb-2 hud-label">PASSWORD</label>
                             <div className="relative">
-                                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2" size={16} style={{ color: '#334155' }} />
+                                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 z-10" size={16} style={{ color: '#334155' }} />
                                 <input
                                     type="password" value={password}
                                     onChange={e => setPassword(e.target.value)}
-                                    className="avio-input pl-10"
+                                    className="avio-input leading-tight"
+                                    style={{ paddingLeft: '2.75rem' }}
                                     placeholder="••••••••" required
                                 />
                             </div>
