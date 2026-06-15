@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
     LayoutDashboard, Users, Plane, Settings, FileText,
-    Calendar, Clock, LogOut, Radio, Bell, AlertTriangle,
+    Calendar, Clock, LogOut, Radio, AlertTriangle,
     ChevronRight, Zap, Inbox
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -41,10 +41,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         { to: '/crew', icon: <Users size={18} />, label: 'Crew Management' },
         { to: '/flights', icon: <Plane size={18} />, label: 'Flight Operations' },
         { to: '/inbox', icon: <Inbox size={18} />, label: 'Approval Inbox' },
-        { to: '/live-board', icon: <Radio size={18} />, label: 'Live Flight Board' },
         { to: '/rules', icon: <Settings size={18} />, label: 'System Rules' },
         { to: '/reports', icon: <FileText size={18} />, label: 'Reports' },
-        { to: '/notifications', icon: <Bell size={18} />, label: 'Notifications', badge: unreadCount },
     ];
 
     const schedulerLinks = [
@@ -52,14 +50,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         { to: '/inbox', icon: <Inbox size={18} />, label: 'Approval Inbox' },
         { to: '/live-board', icon: <Radio size={18} />, label: 'Live Flight Board' },
         { to: '/conflicts', icon: <AlertTriangle size={18} />, label: 'Conflict Viewer' },
-        { to: '/notifications', icon: <Bell size={18} />, label: 'Notifications', badge: unreadCount },
     ];
 
     const crewLinks = [
         { to: '/dashboard', icon: <LayoutDashboard size={18} />, label: 'My Schedule' },
         { to: '/availability', icon: <Calendar size={18} />, label: 'Availability' },
         { to: '/live-board', icon: <Radio size={18} />, label: 'Flight Board' },
-        { to: '/notifications', icon: <Bell size={18} />, label: 'Notifications', badge: unreadCount },
     ];
 
     const links = user?.role === 'admin' ? adminLinks
@@ -121,7 +117,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         <span className="shrink-0" style={{ color: 'inherit' }}>{link.icon}</span>
                         {isOpen && <span className="font-medium flex-1 overflow-hidden whitespace-nowrap">{link.label}</span>}
                         {link.badge > 0 && (
-                            <span className={`bg-red-500 text-white font-bold rounded-full flex items-center justify-center pulse-dot ${isOpen ? 'min-w-[1.25rem] h-5 px-1.5 text-xs' : 'absolute top-0 right-0 w-3 h-3 text-[10px]'}`}>
+                            <span className={`bg-red-500 text-white font-bold rounded-full flex items-center justify-center pulse-dot ${isOpen ? 'w-5 h-5 px-1.5 text-xs' : 'absolute top-0 right-0 w-3 h-3 text-[10px]'}`}>
                                 {isOpen ? (link.badge > 9 ? '9+' : link.badge) : ''}
                             </span>
                         )}

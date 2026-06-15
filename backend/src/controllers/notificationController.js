@@ -56,9 +56,15 @@ const markAllRead = async (req, res) => {
 // DELETE /api/notifications/:id
 const deleteNotification = async (req, res) => {
     try {
-        await prisma.notification.delete({
-            where: { id: parseInt(req.params.id) },
+        const notification = await prisma.notification.findFirst({
+            where: { id: parseInt(req.params.id), userId: req.user.id },
         });
+
+        if (!notification) {
+            return res.status(404).json({ message: 'Notification not found' });
+        }
+
+        await prisma.notification.delete({ where: { id: notification.id } });
         res.json({ message: 'Notification deleted' });
     } catch (err) {
         res.status(500).json({ message: 'Failed to delete notification', error: err.message });

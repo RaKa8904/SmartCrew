@@ -332,7 +332,16 @@ const CrewManagement = () => {
     const [editTarget, setEditTarget] = useState(null);
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [toastMessage, setToastMessage] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
     const todayDay = format(new Date(), 'EEEE');
+
+    const filteredCrew = crew.filter((member) => {
+        const query = searchQuery.trim().toLowerCase();
+        if (!query) return true;
+        return [member.user?.name, member.user?.email, member.crewType, member.qualification, member.status, member.inactiveDayOfWeek]
+            .filter(Boolean)
+            .some((value) => String(value).toLowerCase().includes(query));
+    });
 
     const fetchData = async () => {
         setLoading(true);
@@ -402,6 +411,15 @@ const CrewManagement = () => {
                     <p className="text-slate-400 mt-1">Manage pilots and cabin crew profiles</p>
                 </div>
                 <div className="flex gap-4">
+                    <div className="relative min-w-70">
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search crew by name, email, type, day..."
+                            className="w-full bg-slate-900 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-primary-500/50 placeholder:text-slate-500"
+                        />
+                    </div>
                     <button
                         onClick={() => setShowUploadModal(true)}
                         className="glass-button flex items-center gap-2 px-4 py-2 text-sm"
@@ -437,13 +455,13 @@ const CrewManagement = () => {
                                         <Loader2 className="animate-spin inline text-primary-500" size={32} />
                                     </td>
                                 </tr>
-                            ) : crew.length === 0 ? (
+                            ) : filteredCrew.length === 0 ? (
                                 <tr>
                                     <td colSpan="6" className="px-6 py-20 text-center text-slate-500">
                                         No crew members found.
                                     </td>
                                 </tr>
-                            ) : crew.map((member) => (
+                            ) : filteredCrew.map((member) => (
                                 <tr key={member.id} className="hover:bg-white/2 transition-colors group">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
