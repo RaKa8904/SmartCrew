@@ -59,8 +59,11 @@ const generateSchedule = async (actingUserId) => {
     for (const flight of unscheduledFlights) {
         // Get the date string for this flight's departure (YYYY-MM-DD)
         const flightDepDate = new Date(flight.departureTime).toISOString().slice(0, 10);
+        const flightWeekday = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date(flight.departureTime).getUTCDay()];
 
         const availableCrew = allCrew.filter(crew => {
+            if (crew.inactiveDayOfWeek && crew.inactiveDayOfWeek === flightWeekday) return false;
+
             // 1. Check availability record for that specific date
             //    The field in schema is `availableDate`, not `date`
             const avail = crew.availability.find(a => {

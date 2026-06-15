@@ -51,8 +51,8 @@ const DroppableFlight = ({ flight, onUnassign }) => {
     const assignedCrew = flight.schedules || [];
 
     return (
-        <div ref={setNodeRef} className={`glass-card p-4 w-full transition-all ${isOver ? 'ring-2 ring-emerald-500 ring-offset-2 ring-offset-slate-950 bg-emerald-900/10' : ''}`}>
-            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between mb-3">
+        <div ref={setNodeRef} className={`glass-card p-3 w-full transition-all ${isOver ? 'ring-2 ring-emerald-500 ring-offset-2 ring-offset-slate-950 bg-emerald-900/10' : ''}`}>
+            <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between mb-3">
                 <div className="min-w-0">
                     <span className="fids-code text-sm font-bold text-white">{flight.flightNumber}</span>
                     <div className="flex flex-wrap items-center gap-2 mt-1">
@@ -71,7 +71,7 @@ const DroppableFlight = ({ flight, onUnassign }) => {
                 </div>
             </div>
 
-            <div className="space-y-2 min-h-20 p-2 rounded-xl bg-slate-950/30 border border-dashed border-slate-800">
+            <div className="space-y-2 min-h-16 p-2 rounded-xl bg-slate-950/30 border border-dashed border-slate-800">
                 {assignedCrew.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-slate-500 pt-4 pb-2">
                         <UserPlus size={16} className="mb-1 opacity-50" />
@@ -86,7 +86,7 @@ const DroppableFlight = ({ flight, onUnassign }) => {
                         return (
                             <div key={schedule.id || i} className="flex items-center justify-between p-2 rounded-lg bg-emerald-900/20 border border-emerald-500/20">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-bold">
+                                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-bold shrink-0">
                                         {userInitial}
                                     </div>
                                     <div>
@@ -289,9 +289,9 @@ const SchedulerDashboard = () => {
 
                     {/* Right Area: Flight Columns */}
                     <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-2">
-                        <div className="flex flex-col gap-4 h-full items-stretch">
+                        <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-4 items-start">
                             {loading ? (
-                                [1, 2, 3].map(i => <div key={i} className="w-full h-64 skeleton rounded-2xl" />)
+                                [1, 2, 3].map(i => <div key={i} className="w-full h-56 skeleton rounded-2xl" />)
                             ) : dayFlights.length === 0 ? (
                                 <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 border-2 border-dashed border-slate-800 rounded-2xl">
                                     <Plane size={32} className="mb-3 opacity-20" />

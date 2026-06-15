@@ -50,7 +50,7 @@ const getCrewDetails = async (req, res) => {
 
 const updateCrew = async (req, res) => {
     const { id } = req.params;
-    const { crewType, qualification, maxHoursPerWeek, status } = req.body;
+    const { crewType, qualification, maxHoursPerWeek, status, inactiveDayOfWeek } = req.body;
     try {
         const crew = await prisma.crew.update({
             where: { id: parseInt(id) },
@@ -59,6 +59,7 @@ const updateCrew = async (req, res) => {
                 qualification,
                 maxHoursPerWeek: parseInt(maxHoursPerWeek),
                 status,
+                inactiveDayOfWeek: inactiveDayOfWeek || null,
             },
         });
         res.json(crew);
@@ -79,8 +80,22 @@ const deleteCrew = async (req, res) => {
 
 const updateAvailability = async (req, res) => {
     const { id } = req.params;
-    const { availableDate, status } = req.body;
+    const { availableDate, status, inactiveDayOfWeek } = req.body;
     try {
+        if (inactiveDayOfWeek !== undefined) {
+            const allowedDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            if (inactiveDayOfWeek && !allowedDays.includes(inactiveDayOfWeek)) {
+                return res.status(400).json({ message: 'Invalid inactive day selected' });
+            }
+
+            const updatedCrew = await prisma.crew.update({
+                where: { id: parseInt(id) },
+                data: { inactiveDayOfWeek: inactiveDayOfWeek || null },
+            });
+
+            return res.status(200).json(updatedCrew);
+        }
+
         const dateObj = new Date(availableDate);
         // Normalize the date
         const startOfDay = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());

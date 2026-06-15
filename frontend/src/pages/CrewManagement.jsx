@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import { Users, Shield, Briefcase, Trash2, Edit, Loader2, CheckCircle, XCircle, X, Save, UploadCloud, FileUp, AlertCircle } from 'lucide-react';
+import { format } from 'date-fns';
 
 const CREW_TYPES = ['pilot', 'cabin_crew'];
 const STATUSES = ['active', 'inactive'];
+const WEEK_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const EditModal = ({ member, onClose, onSaved }) => {
     const [form, setForm] = useState({
@@ -11,6 +13,7 @@ const EditModal = ({ member, onClose, onSaved }) => {
         qualification: member.qualification || '',
         maxHoursPerWeek: member.maxHoursPerWeek || 40,
         status: member.status || 'active',
+        inactiveDayOfWeek: member.inactiveDayOfWeek || '',
     });
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
@@ -116,6 +119,25 @@ const EditModal = ({ member, onClose, onSaved }) => {
                             {STATUSES.map((s) => (
                                 <option key={s} value={s} className="bg-slate-900">
                                     {s.charAt(0).toUpperCase() + s.slice(1)}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                            Inactive Day
+                        </label>
+                        <select
+                            name="inactiveDayOfWeek"
+                            value={form.inactiveDayOfWeek}
+                            onChange={handleChange}
+                            className="w-full bg-slate-900 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-primary-500/50"
+                        >
+                            <option value="" className="bg-slate-900">No inactive day</option>
+                            {WEEK_DAYS.map((day) => (
+                                <option key={day} value={day} className="bg-slate-900">
+                                    {day}
                                 </option>
                             ))}
                         </select>
@@ -310,6 +332,7 @@ const CrewManagement = () => {
     const [editTarget, setEditTarget] = useState(null);
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [toastMessage, setToastMessage] = useState(null);
+    const todayDay = format(new Date(), 'EEEE');
 
     const fetchData = async () => {
         setLoading(true);
@@ -402,6 +425,7 @@ const CrewManagement = () => {
                                 <th className="px-6 py-4 font-semibold">Type</th>
                                 <th className="px-6 py-4 font-semibold">Qualification</th>
                                 <th className="px-6 py-4 font-semibold">Weekly Max</th>
+                                <th className="px-6 py-4 font-semibold">Inactive Day</th>
                                 <th className="px-6 py-4 font-semibold">Status</th>
                                 <th className="px-6 py-4 font-semibold text-right">Action</th>
                             </tr>
@@ -420,7 +444,7 @@ const CrewManagement = () => {
                                     </td>
                                 </tr>
                             ) : crew.map((member) => (
-                                <tr key={member.id} className="hover:bg-white/[0.02] transition-colors group">
+                                <tr key={member.id} className="hover:bg-white/2 transition-colors group">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center font-bold text-primary-500 border border-white/5 group-hover:bg-primary-600 group-hover:text-white transition-all">
@@ -443,6 +467,24 @@ const CrewManagement = () => {
                                     </td>
                                     <td className="px-6 py-4 text-sm text-white font-bold">
                                         {member.maxHoursPerWeek} hrs
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {member.inactiveDayOfWeek ? (
+                                            <div className="flex flex-col gap-2">
+                                                <div className="flex items-center gap-2 px-3 py-1 rounded-full w-fit bg-red-500/10 text-red-400 border border-red-500/20">
+                                                    <XCircle size={12} />
+                                                    <span className="text-[10px] font-bold uppercase tracking-tight">{member.inactiveDayOfWeek}</span>
+                                                </div>
+                                                {member.inactiveDayOfWeek === todayDay && (
+                                                    <div className="flex items-center gap-2 px-3 py-1 rounded-full w-fit bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                                        <CheckCircle size={12} />
+                                                        <span className="text-[10px] font-bold uppercase tracking-tight">Inactive today</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <span className="text-sm text-slate-500">Not set</span>
+                                        )}
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className={`flex items-center gap-2 px-3 py-1 rounded-full w-fit ${member.status === 'active' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>

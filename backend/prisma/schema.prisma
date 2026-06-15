@@ -30,6 +30,7 @@ model Crew {
   qualification   String
   maxHoursPerWeek Int      @default(40)
   status          String   @default("active")
+  inactiveDayOfWeek String?
   availability            Availability[]
   schedules               Schedule[]
   leaveRequests           LeaveRequest[]
