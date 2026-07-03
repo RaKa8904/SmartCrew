@@ -1,4 +1,5 @@
 const { generateWorkloadReport, convertToCSV, getAdvancedAnalytics: fetchAdvancedAnalytics } = require('../services/reportingService');
+const { getFatiguePreview: fetchFatiguePreview } = require('../services/fatigueRiskService');
 
 const downloadWorkloadReport = async (req, res) => {
     try {
@@ -30,4 +31,15 @@ const getAdvancedAnalytics = async (req, res) => {
     }
 };
 
-module.exports = { downloadWorkloadReport, getUtilizationStats, getAdvancedAnalytics };
+const getFatiguePreview = async (req, res) => {
+    try {
+        const { flightId, crewId } = req.query;
+        const data = await fetchFatiguePreview({ flightId, crewId });
+        res.json(data);
+    } catch (error) {
+        const statusCode = error.statusCode || 500;
+        res.status(statusCode).json({ message: 'Server error', error: error.message });
+    }
+};
+
+module.exports = { downloadWorkloadReport, getUtilizationStats, getAdvancedAnalytics, getFatiguePreview };

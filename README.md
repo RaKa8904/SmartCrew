@@ -1,6 +1,7 @@
 <div align="center">
 
 # ✈️ SmartCrew
+
 ### Aviation Operations Center — AI-Powered Crew Scheduling
 
 <br/>
@@ -28,12 +29,12 @@
 
 ## 📸 Preview
 
-| Interactive Scheduler | Admin Analytics | Live Flight Board |
-|:---:|:---:|:---:|
+|     Interactive Scheduler      |            Admin Analytics            |         Live Flight Board          |
+| :----------------------------: | :-----------------------------------: | :--------------------------------: |
 | Drag-and-drop assignment board | Scatter plots, delays, and CSV export | FIDS airport-style departure board |
 
-| Flight Management | Crew Portal | Notifications |
-|:---:|:---:|:---:|
+|     Flight Management     |              Crew Portal              |          Notifications           |
+| :-----------------------: | :-----------------------------------: | :------------------------------: |
 | Boarding-pass style cards | Shift Bids, Swaps, and Leave Requests | Real-time WebSocket + SMTP Email |
 
 ---
@@ -41,49 +42,71 @@
 ## ✨ Features
 
 ### 🛡️ Role-Based Access Control
+
 Three distinct portals with protected routes and JWT authentication:
 
-| Role | Access |
-|---|---|
-| **Admin** | Full control — crew, flights, rules, reports, analytics, system insights |
-| **Scheduler** | Auto-generate schedules, drag-and-drop assignments, resolve conflicts |
-| **Crew** | Personal schedule, shift bidding, peer swaps, availability management |
+| Role          | Access                                                                   |
+| ------------- | ------------------------------------------------------------------------ |
+| **Admin**     | Full control — crew, flights, rules, reports, analytics, system insights |
+| **Scheduler** | Auto-generate schedules, drag-and-drop assignments, resolve conflicts    |
+| **Crew**      | Personal schedule, shift bidding, peer swaps, availability management    |
 
 ### 🤖 AI Scheduling Engine & System Rules
+
 Multi-factor crew scoring algorithm enforcing dynamic system rules:
+
 - Respects **Min Rest Period** between flights
 - Enforces **Max Weekly Duty Hours** cap per crew member
 - Checks **Crew Availability** and **Leave Requests**
 - Matches **Qualification Type** to flight constraints
 - Detects and prevents **Overlap Conflicts** automatically.
 
+### 🧠 Fatigue Risk Baseline
+
+The project now has a first-pass fatigue risk target that predicts risk before assignment:
+
+- Exposes a **0–100 fatigue risk score** plus **Low / Medium / High** class
+- Uses rolling **24-hour / 7-day / 28-day duty windows** from current schedule history
+- Factors in **hours since last rest**, **consecutive duty days**, **timezone crossings**, and **night/early-morning departures**
+- Lives beside the rule engine as a baseline heuristic for the later synthetic-data and ML phases
+
 ### 🧩 Interactive Drag-and-Drop Scheduler
+
 A specialized visual workspace for Schedulers:
+
 - Filter available crew memebers by date.
 - Drag-and-drop crew from the Available Pool directly onto upcoming Flight Cards.
 - Triggers instant recalculation and assignment validation.
 
 ### 🌍 Real-World Flight Data Integration (Hybrid Engine)
+
 The system is capable of ingesting live tracking data rather than relying completely on simulations:
+
 - **Live FIDS Sync:** Instant integration with the **Aviationstack API** to ingest real-world, live domestic flights (e.g., DEL to BOM).
 - **Fallback Simulation:** Automatically generates realistic high-volume routing models if an API key is absent.
 - **Auto-Staffing Pipeline:** Wipes old dummy flights, pulls 60+ new tracking flights, and instantly fires the AI Scoring Engine to evaluate 80+ mock crew members and auto-staff every single real flight according to compliance rules.
 
 ### 📈 Advanced Analytics & Admin Dashboard
+
 Actionable operational intelligence:
+
 - **Fleet Delays (7-Day Forecast):** Rolling line chart tracking dispatch reliability.
 - **Crew Fatigue Hotspots:** Scatter plot cross-referencing Scheduled Duty Hours vs Alert/Notification count to prevent burnout.
 - **Crew Utilization:** Workload percentage ranking charts.
 - **Data Export:** Instant raw CSV workload exports.
 
 ### 🛫 Live Flight Board (FIDS) & Real-Time Comms
+
 Real-time operations synchronized across all active clients:
+
 - **WebSockets:** Live updates to FIDS boards and Crew Portals via `Socket.io`.
 - **SMTP Email Notifications:** Securely sends alert emails for manual scheduling changes directly to Crew member inboxes.
 - Flip-text animation on status changes.
 
 ### 👥 Comprehensive Crew Self-Service Portal
+
 Empowers crew members with direct schedule control:
+
 - **Shift Swabbing:** Request shift trades with qualified peers. Includes multi-stage approval workflow.
 - **Flight Bidding:** Place bids on unassigned priority flights.
 - **Leave Management:** Submit and track leave request statuses.
@@ -92,15 +115,15 @@ Empowers crew members with direct schedule control:
 
 ## 🚀 Tech Stack
 
-| Layer | Technology |
-|---|---|
-| **Frontend** | React 19 + Vite 7 + Tailwind CSS v4 |
+| Layer              | Technology                                        |
+| ------------------ | ------------------------------------------------- |
+| **Frontend**       | React 19 + Vite 7 + Tailwind CSS v4               |
 | **UI Interactive** | @dnd-kit/core (Drag & Drop), Recharts (Analytics) |
-| **Fonts/Icons** | Inter, Space Mono, Lucide React, Framer Motion |
-| **Backend** | Node.js 22 + Express 5 |
-| **Real-Time** | Socket.io (WebSockets), Nodemailer (SMTP) |
-| **Database** | PostgreSQL 16 + Prisma ORM 5 |
-| **Auth** | JWT (jsonwebtoken) + bcryptjs |
+| **Fonts/Icons**    | Inter, Space Mono, Lucide React, Framer Motion    |
+| **Backend**        | Node.js 22 + Express 5                            |
+| **Real-Time**      | Socket.io (WebSockets), Nodemailer (SMTP)         |
+| **Database**       | PostgreSQL 16 + Prisma ORM 5                      |
+| **Auth**           | JWT (jsonwebtoken) + bcryptjs                     |
 
 ---
 
@@ -120,6 +143,7 @@ SmartCrew/
 │       ├── routes/                # Express routing multiplexer
 │       ├── services/
 │       │   ├── emailService.js        # Nodemailer SMTP logic
+│       │   ├── fatigueRiskService.js   # Heuristic fatigue preview baseline
 │       │   ├── socketService.js       # Live event broadcaster
 │       │   ├── reportingService.js    # Prisma Aggregation (Fatigue/Delays)
 │       │   ├── schedulingService.js   # Constraints validation
@@ -147,10 +171,12 @@ SmartCrew/
 ## ⚙️ Setup & Installation
 
 ### Prerequisites
+
 - **Node.js** v18+
 - **PostgreSQL** v14+
 
 ### 1. Clone the repo
+
 ```bash
 git clone https://github.com/RaKa8904/SmartCrew.git
 cd SmartCrew
@@ -164,6 +190,7 @@ npm install
 ```
 
 Create a `.env` file in the `backend/` directory:
+
 ```env
 DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/crew_scheduling?schema=public"
 JWT_SECRET="your_secure_jwt_secret_here"
@@ -191,12 +218,14 @@ npx prisma db seed
 ### 4. Start the Application
 
 **Backend:**
+
 ```bash
 npm run dev
 # Server starts on http://localhost:5000
 ```
 
 **Frontend:**
+
 ```bash
 cd ../frontend
 npm install
@@ -210,12 +239,12 @@ npm run dev
 
 > The login page includes a **Quick Access panel** — just click a role card to auto-fill credentials.
 
-| Role | Email | Password |
-|---|---|---|
-| 🟡 **Admin** | `admin@airline.com` | `password123` |
-| 🔵 **Scheduler** | `scheduler@airline.com` | `password123` |
-| 🟣 **Pilot** | `pilot1@airline.com` | `password123` |
-| 🟢 **Cabin Crew** | `cabin1@airline.com` | `password123` |
+| Role              | Email                   | Password      |
+| ----------------- | ----------------------- | ------------- |
+| 🟡 **Admin**      | `admin@airline.com`     | `password123` |
+| 🔵 **Scheduler**  | `scheduler@airline.com` | `password123` |
+| 🟣 **Pilot**      | `pilot1@airline.com`    | `password123` |
+| 🟢 **Cabin Crew** | `cabin1@airline.com`    | `password123` |
 
 ---
 
@@ -232,3 +261,11 @@ This project is licensed under the **MIT License** — see [LICENSE](./LICENSE) 
 <sub>SmartCrew · Aviation Operations Center · 2025–2026</sub>
 
 </div>
+
+---
+
+## Fatigue Upgrade Roadmap
+
+1. Phase 1 is now in place as a heuristic fatigue preview endpoint: `GET /api/reports/fatigue/preview?flightId=...`
+2. Phase 2 will add synthetic training data and a labeled fatigue dataset.
+3. Phase 3 onward will move this into a trained model and later a FastAPI microservice.
