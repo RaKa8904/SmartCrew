@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/Project-Final%20Year%20T.E.%20AI%20%26%20DS-a78bfa?style=flat-square" />
 </p>
 
-> **An advanced, AI-powered full-stack aviation crew scheduling system** — automating crew assignment, conflict detection, duty compliance, and flight operations management for airlines. Built as a Final Year **T.E. AI & DS** Project.
+> **An advanced, AI-powered full-stack aviation crew scheduling system** — automating crew assignment, conflict detection, duty compliance, and flight operations management for airlines. Built as a **T.E. AI & DS** Project.
 
 </div>
 
