@@ -131,3 +131,28 @@ model ShiftBid {
   status       String   @default("placed") // placed, won, lost
   bidTimestamp DateTime @default(now())
 }
+
+model FatigueTrainingSample {
+  id                Int      @id @default(autoincrement())
+  sampleKey         String   @unique
+  crewName          String
+  crewType          String
+  qualification     String
+  dutyDate          DateTime
+  departureTime     DateTime
+  arrivalTime       DateTime
+  origin            String
+  destination       String
+  flightNumber      String
+  aircraftType      String
+  featureVector     Json
+  labelScore        Float
+  labelClass        String
+  noiseApplied      Float
+  dataSource        String   @default("synthetic")
+  modelVersion      String
+  createdAt         DateTime @default(now())
+
+  @@index([crewName, dutyDate])
+  @@index([labelClass])
+}
