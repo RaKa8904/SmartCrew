@@ -266,7 +266,7 @@ This project is licensed under the **MIT License** — see [LICENSE](./LICENSE) 
 
 ## Fatigue Upgrade Roadmap
 
-1. Phase 1 is now in place as a heuristic fatigue preview endpoint: `GET /api/reports/fatigue/preview?flightId=...`
-2. Phase 2 will add synthetic training data and a labeled fatigue dataset.
-3. Phase 3 is now complete: the trained artifact is saved at `backend/artifacts/fatigue/fatigue_model_v1.pkl`.
-4. Current benchmark on the synthetic dataset: Random Forest, accuracy 95.40%, macro F1 78.23%, macro AUC 99.23%.
+1. **Phase 1**: Heuristic fatigue preview endpoint: `GET /api/reports/fatigue/preview?flightId=...` (Completed)
+2. **Phase 2**: Added synthetic training data generator `generate-fatigue-dataset.js` and database tables. (Completed)
+3. **Phase 3**: Built the Random Forest training script `train-fatigue-model.py` and saved the model artifact at `backend/artifacts/fatigue/fatigue_model_v1.pkl`. (Completed)
+4. **Phase 4**: Integrated scikit-learn model predictions using a fast batched Python subprocess interface in `fatigueRiskService.js` with heuristic-v1 fallback. (Completed)

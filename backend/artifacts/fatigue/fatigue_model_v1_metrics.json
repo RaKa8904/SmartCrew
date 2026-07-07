@@ -1,0 +1,310 @@
+{
+  "artifactVersion": "fatigue_model_v1",
+  "datasetRows": 20720,
+  "trainRows": 16576,
+  "testRows": 4144,
+  "featureColumns": [
+    "dutyHours24",
+    "dutyHours7d",
+    "dutyHours28d",
+    "hoursSinceLastRest",
+    "consecutiveDutyDays",
+    "timezoneCrossings",
+    "nightFlightCount",
+    "departureLocalHour",
+    "arrivalLocalHour",
+    "isEarlyMorningDeparture",
+    "isLateNightDeparture",
+    "isOvernightArrival"
+  ],
+  "labelOrder": [
+    "low",
+    "medium",
+    "high"
+  ],
+  "evaluations": [
+    {
+      "modelName": "random_forest",
+      "accuracy": 0.950530888030888,
+      "f1Macro": 0.8821557089270543,
+      "f1Weighted": 0.9502776648365476,
+      "confusionMatrix": [
+        [
+          3319,
+          91,
+          0
+        ],
+        [
+          107,
+          604,
+          0
+        ],
+        [
+          0,
+          7,
+          16
+        ]
+      ],
+      "classificationReport": {
+        "low": {
+          "precision": 0.9687682428488033,
+          "recall": 0.9733137829912023,
+          "f1-score": 0.9710356933879462,
+          "support": 3410.0
+        },
+        "medium": {
+          "precision": 0.8603988603988604,
+          "recall": 0.849507735583685,
+          "f1-score": 0.8549186128803963,
+          "support": 711.0
+        },
+        "high": {
+          "precision": 1.0,
+          "recall": 0.6956521739130435,
+          "f1-score": 0.8205128205128205,
+          "support": 23.0
+        },
+        "accuracy": 0.950530888030888,
+        "macro avg": {
+          "precision": 0.9430557010825545,
+          "recall": 0.8394912308293102,
+          "f1-score": 0.8821557089270543,
+          "support": 4144.0
+        },
+        "weighted avg": {
+          "precision": 0.950348286162647,
+          "recall": 0.950530888030888,
+          "f1-score": 0.9502776648365476,
+          "support": 4144.0
+        }
+      },
+      "rocAucMacro": 0.9920747273254644,
+      "predictedDistribution": {
+        "low": 3426,
+        "medium": 702,
+        "high": 16
+      },
+      "topTreeFactors": [
+        {
+          "feature": "hoursSinceLastRest",
+          "importance": 0.37051931909457947
+        },
+        {
+          "feature": "dutyHours24",
+          "importance": 0.2762047352886323
+        },
+        {
+          "feature": "dutyHours7d",
+          "importance": 0.1545611805976106
+        },
+        {
+          "feature": "dutyHours28d",
+          "importance": 0.07433318591949714
+        },
+        {
+          "feature": "departureLocalHour",
+          "importance": 0.035254841182536696
+        }
+      ],
+      "probabilityShape": [
+        4144,
+        3
+      ]
+    },
+    {
+      "modelName": "logistic_regression",
+      "accuracy": 0.9068532818532818,
+      "f1Macro": 0.7185664180251509,
+      "f1Weighted": 0.9157696541849054,
+      "confusionMatrix": [
+        [
+          3097,
+          313,
+          0
+        ],
+        [
+          14,
+          638,
+          59
+        ],
+        [
+          0,
+          0,
+          23
+        ]
+      ],
+      "classificationReport": {
+        "low": {
+          "precision": 0.9954998392799743,
+          "recall": 0.9082111436950147,
+          "f1-score": 0.9498543168225733,
+          "support": 3410.0
+        },
+        "medium": {
+          "precision": 0.6708727655099895,
+          "recall": 0.8973277074542897,
+          "f1-score": 0.7677496991576414,
+          "support": 711.0
+        },
+        "high": {
+          "precision": 0.2804878048780488,
+          "recall": 1.0,
+          "f1-score": 0.4380952380952381,
+          "support": 23.0
+        },
+        "accuracy": 0.9068532818532818,
+        "macro avg": {
+          "precision": 0.6489534698893376,
+          "recall": 0.935179617049768,
+          "f1-score": 0.7185664180251509,
+          "support": 4144.0
+        },
+        "weighted avg": {
+          "precision": 0.9358340269629609,
+          "recall": 0.9068532818532818,
+          "f1-score": 0.9157696541849054,
+          "support": 4144.0
+        }
+      },
+      "rocAucMacro": 0.9800532488500536,
+      "predictedDistribution": {
+        "low": 3111,
+        "medium": 951,
+        "high": 82
+      },
+      "topLinearFactors": {
+        "high": [
+          {
+            "feature": "hoursSinceLastRest",
+            "weight": -28.752402119972302
+          },
+          {
+            "feature": "dutyHours24",
+            "weight": 1.5341258496078782
+          },
+          {
+            "feature": "dutyHours7d",
+            "weight": 1.2844469246932504
+          },
+          {
+            "feature": "dutyHours28d",
+            "weight": 0.6853875627687107
+          },
+          {
+            "feature": "departureLocalHour",
+            "weight": -0.6312069643347676
+          }
+        ],
+        "low": [
+          {
+            "feature": "hoursSinceLastRest",
+            "weight": 15.570332514467207
+          },
+          {
+            "feature": "dutyHours24",
+            "weight": -2.4767513262190555
+          },
+          {
+            "feature": "dutyHours7d",
+            "weight": -1.4393228803925706
+          },
+          {
+            "feature": "dutyHours28d",
+            "weight": -0.8778077182605187
+          },
+          {
+            "feature": "isOvernightArrival",
+            "weight": -0.7414769684551551
+          }
+        ],
+        "medium": [
+          {
+            "feature": "hoursSinceLastRest",
+            "weight": 13.182069605505184
+          },
+          {
+            "feature": "dutyHours24",
+            "weight": 0.9426254766111581
+          },
+          {
+            "feature": "departureLocalHour",
+            "weight": 0.27857993662274944
+          },
+          {
+            "feature": "isOvernightArrival",
+            "weight": 0.24857438761524847
+          },
+          {
+            "feature": "isEarlyMorningDeparture",
+            "weight": 0.23952342006026864
+          }
+        ]
+      },
+      "probabilityShape": [
+        4144,
+        3
+      ]
+    }
+  ],
+  "selectedModel": "random_forest",
+  "selectedMetrics": {
+    "accuracy": 0.950530888030888,
+    "f1Macro": 0.8821557089270543,
+    "f1Weighted": 0.9502776648365476,
+    "rocAucMacro": 0.9920747273254644,
+    "confusionMatrix": [
+      [
+        3319,
+        91,
+        0
+      ],
+      [
+        107,
+        604,
+        0
+      ],
+      [
+        0,
+        7,
+        16
+      ]
+    ],
+    "classificationReport": {
+      "low": {
+        "precision": 0.9687682428488033,
+        "recall": 0.9733137829912023,
+        "f1-score": 0.9710356933879462,
+        "support": 3410.0
+      },
+      "medium": {
+        "precision": 0.8603988603988604,
+        "recall": 0.849507735583685,
+        "f1-score": 0.8549186128803963,
+        "support": 711.0
+      },
+      "high": {
+        "precision": 1.0,
+        "recall": 0.6956521739130435,
+        "f1-score": 0.8205128205128205,
+        "support": 23.0
+      },
+      "accuracy": 0.950530888030888,
+      "macro avg": {
+        "precision": 0.9430557010825545,
+        "recall": 0.8394912308293102,
+        "f1-score": 0.8821557089270543,
+        "support": 4144.0
+      },
+      "weighted avg": {
+        "precision": 0.950348286162647,
+        "recall": 0.950530888030888,
+        "f1-score": 0.9502776648365476,
+        "support": 4144.0
+      }
+    }
+  },
+  "timeSplit": {
+    "trainEndDutyDate": "2026-02-25T11:06:00",
+    "testStartDutyDate": "2026-02-25T11:38:00"
+  }
+}

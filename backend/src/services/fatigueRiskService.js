@@ -1,8 +1,13 @@
 const { PrismaClient } = require('@prisma/client');
 const airportCoordinates = require('../utils/airportCoordinates');
+const fs = require('fs');
+const path = require('path');
+const { execFileSync } = require('child_process');
 
 const prisma = new PrismaClient();
 const FATIGUE_MODEL_VERSION = 'heuristic-v1';
+const MODEL_PATH = path.join(__dirname, '../../artifacts/fatigue/fatigue_model_v1.pkl');
+const PREDICT_SCRIPT_PATH = path.join(__dirname, '../../scripts/predict-fatigue.py');
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
@@ -196,9 +201,79 @@ const scoreFatigueFeatures = (features) => {
     };
 };
 
+const predictFatigueML = (features) => {
+    if (!fs.existsSync(MODEL_PATH)) {
+        return null;
+    }
+
+    try {
+        const result = execFileSync('python', [
+            PREDICT_SCRIPT_PATH,
+            MODEL_PATH,
+            JSON.stringify(features)
+        ], { encoding: 'utf-8', timeout: 15000 });
+
+        const parsed = JSON.parse(result.trim());
+        if (parsed.status === 'success') {
+            const pHigh = parsed.probabilities.high || 0;
+            const pMedium = parsed.probabilities.medium || 0;
+            const riskScore = Math.round((pMedium * 50) + (pHigh * 100));
+
+            return {
+                riskScore,
+                riskClass: parsed.riskClass,
+                topFactors: [],
+                isML: true
+            };
+        }
+    } catch (err) {
+        console.error('Failed to run ML prediction subprocess:', err.message);
+    }
+    return null;
+};
+
+const predictFatigueMLBatch = (featuresArray) => {
+    if (!fs.existsSync(MODEL_PATH)) {
+        return null;
+    }
+
+    try {
+        const result = execFileSync('python', [
+            PREDICT_SCRIPT_PATH,
+            MODEL_PATH,
+            JSON.stringify(featuresArray)
+        ], { encoding: 'utf-8', timeout: 30000 });
+
+        const parsed = JSON.parse(result.trim());
+        if (parsed.status === 'success') {
+            return parsed.results.map((res) => {
+                const pHigh = res.probabilities.high || 0;
+                const pMedium = res.probabilities.medium || 0;
+                const riskScore = Math.round((pMedium * 50) + (pHigh * 100));
+
+                return {
+                    riskScore,
+                    riskClass: res.riskClass,
+                    topFactors: [],
+                    isML: true
+                };
+            });
+        }
+    } catch (err) {
+        console.error('Failed to run ML prediction batch subprocess:', err.message);
+    }
+    return null;
+};
+
 const buildFatiguePreview = (crew, referenceFlight) => {
     const features = buildFatigueFeatures(crew, referenceFlight);
-    const scored = scoreFatigueFeatures(features);
+    let scored = predictFatigueML(features);
+    let modelVersion = 'fatigue_model_v1';
+
+    if (!scored) {
+        scored = scoreFatigueFeatures(features);
+        modelVersion = FATIGUE_MODEL_VERSION;
+    }
 
     return {
         crew: {
@@ -222,7 +297,7 @@ const buildFatiguePreview = (crew, referenceFlight) => {
             departureTime: referenceFlight.departureTime,
             arrivalTime: referenceFlight.arrivalTime,
         },
-        modelVersion: FATIGUE_MODEL_VERSION,
+        modelVersion,
         features,
         ...scored,
     };
@@ -259,9 +334,45 @@ const getFatiguePreview = async ({ flightId, crewId }) => {
         },
     });
 
-    const previews = crewList
-        .map((crew) => buildFatiguePreview(crew, referenceFlight))
-        .sort((left, right) => right.riskScore - left.riskScore);
+    const featuresList = crewList.map((crew) => buildFatigueFeatures(crew, referenceFlight));
+
+    let mlResults = predictFatigueMLBatch(featuresList);
+
+    if (!mlResults) {
+        mlResults = featuresList.map((features) => scoreFatigueFeatures(features));
+    }
+
+    const previews = crewList.map((crew, idx) => {
+        const features = featuresList[idx];
+        const scored = mlResults[idx];
+
+        return {
+            crew: {
+                id: crew.id,
+                crewType: crew.crewType,
+                qualification: crew.qualification,
+                status: crew.status,
+                user: crew.user
+                    ? {
+                        id: crew.user.id,
+                        name: crew.user.name,
+                        email: crew.user.email,
+                    }
+                    : null,
+            },
+            referenceFlight: {
+                id: referenceFlight.id,
+                flightNumber: referenceFlight.flightNumber,
+                origin: referenceFlight.origin,
+                destination: referenceFlight.destination,
+                departureTime: referenceFlight.departureTime,
+                arrivalTime: referenceFlight.arrivalTime,
+            },
+            modelVersion: scored.isML ? 'fatigue_model_v1' : FATIGUE_MODEL_VERSION,
+            features,
+            ...scored,
+        };
+    }).sort((left, right) => right.riskScore - left.riskScore);
 
     if (parsedCrewId && previews.length === 0) {
         const error = new Error('Crew member not found or inactive');
@@ -278,7 +389,7 @@ const getFatiguePreview = async ({ flightId, crewId }) => {
             departureTime: referenceFlight.departureTime,
             arrivalTime: referenceFlight.arrivalTime,
         },
-        modelVersion: FATIGUE_MODEL_VERSION,
+        modelVersion: previews.length > 0 ? previews[0].modelVersion : FATIGUE_MODEL_VERSION,
         preview: parsedCrewId ? previews[0] : undefined,
         previews: parsedCrewId ? undefined : previews,
     };

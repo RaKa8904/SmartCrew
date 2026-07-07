@@ -1,0 +1,37 @@
+{
+  "artifactVersion": "fatigue_model_v1",
+  "modelPath": "C:\\Users\\Raka\\Projects\\SmartCrew\\backend\\artifacts\\fatigue\\fatigue_model_v1.pkl",
+  "metricsPath": "C:\\Users\\Raka\\Projects\\SmartCrew\\backend\\artifacts\\fatigue\\fatigue_model_v1_metrics.json",
+  "datasetRows": 20720,
+  "trainRows": 16576,
+  "testRows": 4144,
+  "trainEndDutyDate": "2026-02-25T11:06:00",
+  "testStartDutyDate": "2026-02-25T11:38:00",
+  "selectedModel": "random_forest",
+  "selectedMetric": "f1Macro",
+  "labelOrder": [
+    "low",
+    "medium",
+    "high"
+  ],
+  "featureColumns": [
+    "dutyHours24",
+    "dutyHours7d",
+    "dutyHours28d",
+    "hoursSinceLastRest",
+    "consecutiveDutyDays",
+    "timezoneCrossings",
+    "nightFlightCount",
+    "departureLocalHour",
+    "arrivalLocalHour",
+    "isEarlyMorningDeparture",
+    "isLateNightDeparture",
+    "isOvernightArrival"
+  ],
+  "metricsSummary": {
+    "accuracy": 0.950530888030888,
+    "f1Macro": 0.8821557089270543,
+    "f1Weighted": 0.9502776648365476,
+    "rocAucMacro": 0.9920747273254644
+  }
+}
