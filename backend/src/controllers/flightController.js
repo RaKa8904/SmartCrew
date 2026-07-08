@@ -5,6 +5,9 @@ const { syncLiveFlights } = require('../services/flightSyncService');
 const getAllFlights = async (req, res) => {
     try {
         const flights = await prisma.flight.findMany({
+            where: {
+                status: { not: 'completed' }
+            },
             include: {
                 schedules: {
                     include: {

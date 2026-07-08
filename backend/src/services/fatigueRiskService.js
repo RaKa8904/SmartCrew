@@ -215,13 +215,14 @@ const predictFatigueML = (features) => {
 
         const parsed = JSON.parse(result.trim());
         if (parsed.status === 'success') {
-            const pHigh = parsed.probabilities.high || 0;
-            const pMedium = parsed.probabilities.medium || 0;
+            const res = parsed.results;
+            const pHigh = res?.probabilities?.high || 0;
+            const pMedium = res?.probabilities?.medium || 0;
             const riskScore = Math.round((pMedium * 50) + (pHigh * 100));
 
             return {
                 riskScore,
-                riskClass: parsed.riskClass,
+                riskClass: res?.riskClass || 'low',
                 topFactors: [],
                 isML: true
             };
@@ -400,4 +401,5 @@ module.exports = {
     buildFatiguePreview,
     buildFatigueFeatures,
     scoreFatigueFeatures,
+    predictFatigueMLBatch,
 };

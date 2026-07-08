@@ -271,14 +271,14 @@ const AdminDashboard = () => {
                             <AlertTriangle size={18} style={{ color: '#ef4444' }} />
                             Crew Fatigue Hotspots
                         </h3>
-                        <span className="hud-label">HOURS vs ALERTS</span>
+                        <span className="hud-label">HOURS vs FATIGUE RISK</span>
                     </div>
                     <div className="h-56">
                         <ResponsiveContainer width="100%" height="100%">
                             <ScatterChart margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                                 <XAxis type="number" dataKey="dutyHours" name="Duty Hours" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
-                                <YAxis type="number" dataKey="notifications" name="Alerts" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
+                                <YAxis type="number" dataKey="fatigueScore" name="Fatigue Score" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
                                 <ZAxis type="number" range={[50, 200]} />
                                 <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ backgroundColor: '#020617', borderColor: 'rgba(239,68,68,0.2)', borderRadius: '12px', color: '#fff', fontSize: '12px' }} />
                                 <Scatter name="Crew Fatigue" data={crewFatigue} fill="#ef4444" />

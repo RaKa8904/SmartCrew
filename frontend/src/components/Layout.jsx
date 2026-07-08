@@ -48,7 +48,7 @@ const Layout = () => {
             <main 
                 className={`flex-1 overflow-auto transition-all duration-300 relative z-10 ${isSidebarOpen ? 'ml-64' : 'ml-20'}`}
             >
-                <div className={`max-w-screen-2xl mx-auto ${isSidebarOpen ? 'p-8' : 'p-8 pb-8 pt-8 pl-12'}`}>
+                <div className={`max-w-screen-2xl mx-auto ${isSidebarOpen ? 'p-8 pr-28' : 'p-8 pb-8 pt-8 pl-12 pr-28'}`}>
                     <Outlet />
                 </div>
             </main>

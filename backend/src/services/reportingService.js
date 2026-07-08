@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { buildFatigueFeatures, scoreFatigueFeatures, predictFatigueMLBatch } = require('./fatigueRiskService');
 
 const generateWorkloadReport = async () => {
     const crew = await prisma.crew.findMany({
@@ -64,15 +65,48 @@ const getAdvancedAnalytics = async () => {
         }
     });
 
+    // 2.1 Build feature vectors for all crew members with active schedules to process them in batch
+    const crewWithSchedules = crewData.filter(c => c.schedules.length > 0);
+    const featuresList = crewWithSchedules.map(c => {
+        const sortedSchedules = [...c.schedules].sort((a, b) => new Date(b.flight.departureTime) - new Date(a.flight.departureTime));
+        const referenceFlight = sortedSchedules[0].flight;
+        return {
+            crewId: c.id,
+            features: buildFatigueFeatures(c, referenceFlight)
+        };
+    });
+
+    // 2.2 Execute predictions in batch (ML falls back to Heuristics internally if missing)
+    let mlResults = null;
+    if (featuresList.length > 0) {
+        mlResults = predictFatigueMLBatch(featuresList.map(item => item.features));
+    }
+    if (!mlResults && featuresList.length > 0) {
+        mlResults = featuresList.map(item => scoreFatigueFeatures(item.features));
+    }
+
+    // 2.3 Map results to a fast lookup object
+    const scoreMap = {};
+    if (mlResults) {
+        featuresList.forEach((item, idx) => {
+            scoreMap[item.crewId] = mlResults[idx].riskScore;
+        });
+    }
+
+    // 2.4 Map crew fatigue details
     const crewFatigue = crewData.map(c => {
         const dutyHours = c.schedules.reduce((acc, s) => {
             const arr = new Date(s.flight.arrivalTime);
             const dep = new Date(s.flight.departureTime);
             return acc + ((arr - dep) / 3600000);
         }, 0);
+
+        const fatigueScore = scoreMap[c.id] || 0;
+
         return {
             crewName: c.user.name,
             dutyHours: parseFloat(dutyHours.toFixed(2)),
+            fatigueScore: fatigueScore,
             notifications: c.user.notifications.length,
             crewType: c.crewType
         };

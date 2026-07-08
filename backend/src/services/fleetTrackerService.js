@@ -82,6 +82,8 @@ const calcBearing = (originCoords, destCoords) => {
     return Math.atan2(dx, dy) * (180 / Math.PI);
 };
 
+let isAutoSyncing = false;
+
 const startFleetTracker = (io) => {
     console.log('✈️  Starting Live Fleet Tracker simulation (domestic + international)...');
 
@@ -91,6 +93,45 @@ const startFleetTracker = (io) => {
             const flights = await prisma.flight.findMany({
                 where: { status: { in: ['on-time', 'delayed'] } }
             });
+
+            // Check for completed flights
+            const now = new Date();
+            const completedFlights = flights.filter(f => new Date(f.arrivalTime) < now);
+            let fidsUpdated = false;
+
+            if (completedFlights.length > 0) {
+                console.log(`✈️  Auto-completing ${completedFlights.length} arrived flights...`);
+                for (const f of completedFlights) {
+                    await prisma.flight.update({
+                        where: { id: f.id },
+                        data: { status: 'completed' }
+                    });
+                }
+                fidsUpdated = true;
+            }
+
+            // Check if active flights count is low
+            const activeFlightsCount = await prisma.flight.count({
+                where: { status: { in: ['on-time', 'delayed'] } }
+            });
+
+            if (activeFlightsCount < 3 && !isAutoSyncing) {
+                isAutoSyncing = true;
+                console.log('✈️  Active flights low. Running automatic FIDS sync...');
+                try {
+                    const { syncLiveFlights } = require('./flightSyncService');
+                    await syncLiveFlights();
+                    fidsUpdated = true;
+                } catch (syncErr) {
+                    console.error('Error during automatic FIDS sync:', syncErr);
+                } finally {
+                    isAutoSyncing = false;
+                }
+            }
+
+            if (fidsUpdated) {
+                io.emit('fids-update');
+            }
 
             const dbPositions = flights.map(flight => {
                 const originCoords = airportCoordinates[flight.origin] || airportCoordinates['DEL'];

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import { Plane, Plus, Trash2, MapPin, Clock, Loader2, Radio, Users, CheckCircle2, AlertTriangle, XCircle, UploadCloud, FileUp, CheckCircle, X, AlertCircle, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
+import socket from '../services/socket';
 
 const STATUS_META = {
     'on-time': { label: 'On Time', cls: 'status-on-time', icon: <CheckCircle2 size={11} /> },
@@ -9,14 +10,14 @@ const STATUS_META = {
     cancelled: { label: 'Cancelled', cls: 'status-cancelled', icon: <XCircle size={11} /> },
 };
 
-const FlightCard = ({ flight, onDelete, onStatusChange }) => {
+const FlightCard = ({ flight, onDelete, onStatusChange, onClick }) => {
     const meta = STATUS_META[flight.status] || STATUS_META['on-time'];
     const durationMs = new Date(flight.arrivalTime) - new Date(flight.departureTime);
     const durationHrs = (durationMs / (1000 * 60 * 60)).toFixed(1);
     const crewCount = flight.schedules?.length || 0;
 
     return (
-        <div className="boarding-pass group">
+        <div className="boarding-pass group cursor-pointer" onClick={onClick}>
             {/* Top strip */}
             <div className="px-5 pt-5 pb-4">
                 <div className="flex justify-between items-start mb-4">
@@ -30,8 +31,8 @@ const FlightCard = ({ flight, onDelete, onStatusChange }) => {
                             </span>
                         )}
                     </div>
-                    <button onClick={() => onDelete(flight.id)}
-                        className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                    <button onClick={(e) => { e.stopPropagation(); onDelete(flight.id); }}
+                        className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
                         style={{ color: '#475569' }}
                         onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
                         onMouseLeave={e => e.currentTarget.style.color = '#475569'}>
@@ -90,9 +91,9 @@ const FlightCard = ({ flight, onDelete, onStatusChange }) => {
                     </div>
                     <div className="flex items-center gap-1">
                         {Object.keys(STATUS_META).map(s => (
-                            <button key={s} onClick={() => onStatusChange(flight.id, s)}
+                            <button key={s} onClick={(e) => { e.stopPropagation(); onStatusChange(flight.id, s); }}
                                 title={`Mark as ${s}`}
-                                className="w-2 h-2 rounded-full transition-all hover:scale-150"
+                                className="w-2 h-2 rounded-full transition-all hover:scale-150 cursor-pointer"
                                 style={{
                                     background: flight.status === s
                                         ? s === 'on-time' ? '#10b981' : s === 'delayed' ? '#f59e0b' : '#ef4444'
@@ -100,6 +101,121 @@ const FlightCard = ({ flight, onDelete, onStatusChange }) => {
                                 }} />
                         ))}
                     </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const FlightDetailModal = ({ flight, onClose }) => {
+    const assignedCrew = flight.schedules || [];
+    const departureDate = new Date(flight.departureTime);
+    const arrivalDate = new Date(flight.arrivalTime);
+    const durationHrs = ((arrivalDate - departureDate) / (1000 * 60 * 60)).toFixed(1);
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
+            <div className="glass-card w-full max-w-2xl p-6 relative shadow-2xl border border-white/15 mx-4 animate-in zoom-in-95 duration-200">
+                <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors p-1.5 rounded-lg bg-white/5 cursor-pointer">
+                    <X size={18} />
+                </button>
+                
+                {/* Header */}
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-primary-500/20 flex items-center justify-center text-primary-400">
+                        <Plane size={22} />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-white tracking-tight">Flight {flight.flightNumber}</h2>
+                        <p className="text-xs text-slate-400">Detailed flight overview and staffing list</p>
+                    </div>
+                </div>
+
+                {/* Flight Route and Schedule */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white/[0.02] border border-white/5 rounded-xl p-4 mb-6">
+                    <div className="text-center md:text-left">
+                        <p className="hud-label text-[10px] text-slate-500 mb-1">ORIGIN</p>
+                        <p className="fids-code text-2xl font-bold text-white">{flight.origin}</p>
+                        <p className="text-xs text-slate-400 mt-1">{format(departureDate, 'dd MMM yyyy, HH:mm')}</p>
+                    </div>
+                    <div className="flex flex-col items-center justify-center py-2 md:py-0">
+                        <span className="text-[10px] font-bold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full mb-1">{durationHrs} hrs</span>
+                        <div className="w-full flex items-center gap-1">
+                            <div className="h-px flex-1 bg-white/10" />
+                            <Plane size={14} className="rotate-90 text-primary-400" />
+                            <div className="h-px flex-1 bg-white/10" />
+                        </div>
+                    </div>
+                    <div className="text-center md:text-right">
+                        <p className="hud-label text-[10px] text-slate-500 mb-1">DESTINATION</p>
+                        <p className="fids-code text-2xl font-bold text-white">{flight.destination}</p>
+                        <p className="text-xs text-slate-400 mt-1">{format(arrivalDate, 'dd MMM yyyy, HH:mm')}</p>
+                    </div>
+                </div>
+
+                {/* Additional Info Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                    <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                        <p className="hud-label text-[9px] text-slate-500">AIRCRAFT</p>
+                        <p className="text-sm font-semibold text-white mt-0.5">{flight.aircraftType}</p>
+                    </div>
+                    <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                        <p className="hud-label text-[9px] text-slate-500">STATUS</p>
+                        <p className={`text-xs font-bold uppercase mt-1 tracking-wider ${
+                            flight.status === 'on-time' ? 'text-emerald-400' : flight.status === 'delayed' ? 'text-amber-400' : 'text-red-400'
+                        }`}>{flight.status}</p>
+                    </div>
+                    <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                        <p className="hud-label text-[9px] text-slate-500">GATE / TERMINAL</p>
+                        <p className="text-sm font-semibold text-white mt-0.5">{flight.gate || 'TBD'} / {flight.terminal || 'T3'}</p>
+                    </div>
+                    <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                        <p className="hud-label text-[9px] text-slate-500">CREW SIZE</p>
+                        <p className="text-sm font-bold text-white mt-0.5">{assignedCrew.length} Assigned</p>
+                    </div>
+                </div>
+
+                {/* Crew List Section */}
+                <div>
+                    <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                        <Users size={16} className="text-primary-400" />
+                        Assigned Crew Members
+                    </h3>
+                    <div className="space-y-2.5 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+                        {assignedCrew.length === 0 ? (
+                            <div className="p-4 text-center border border-dashed border-white/10 rounded-xl text-slate-500 text-xs">
+                                No crew members assigned to this flight yet.
+                            </div>
+                        ) : (
+                            assignedCrew.map((s, idx) => {
+                                const member = s.crew;
+                                if (!member) return null;
+                                return (
+                                    <div key={s.id || idx} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 hover:border-white/10 transition-colors">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-primary-500/10 text-primary-400 border border-primary-500/20 flex items-center justify-center font-bold text-xs uppercase">
+                                                {member.user?.name?.[0] || 'C'}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-semibold text-white">{member.user?.name}</p>
+                                                <p className="text-[10px] text-slate-400 uppercase tracking-wider">{member.crewType} &bull; {member.qualification}</p>
+                                            </div>
+                                        </div>
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                            member.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-400'
+                                        }`}>{member.status}</span>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
+
+                {/* Action Footer */}
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-white/5">
+                    <button onClick={onClose} className="px-5 py-2 rounded-lg bg-slate-900 border border-white/10 text-slate-300 text-sm font-semibold hover:bg-white/5 transition-colors cursor-pointer">
+                        Close Details
+                    </button>
                 </div>
             </div>
         </div>
@@ -274,6 +390,7 @@ const FlightManagement = () => {
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [toastMessage, setToastMessage] = useState(null);
     const [filter, setFilter] = useState('all');
+    const [selectedFlight, setSelectedFlight] = useState(null);
     const [formData, setFormData] = useState({
         flightNumber: '', origin: '', destination: '',
         departureTime: '', arrivalTime: '', aircraftType: 'Boeing 737', status: 'on-time', gate: '', terminal: ''
@@ -283,6 +400,16 @@ const FlightManagement = () => {
         try {
             const res = await api.get('/flights');
             setFlights(res.data);
+            
+            // Sync selectedFlight structure if the modal is open
+            if (selectedFlight) {
+                const updated = res.data.find(f => f.id === selectedFlight.id);
+                if (updated) {
+                    setSelectedFlight(updated);
+                } else {
+                    setSelectedFlight(null);
+                }
+            }
         } catch (err) {
             console.error('Failed to fetch flights', err);
         } finally { setLoading(false); }
@@ -302,7 +429,16 @@ const FlightManagement = () => {
         }
     };
 
-    useEffect(() => { fetchData(); }, []);
+    useEffect(() => {
+        fetchData();
+        
+        // Listen for websocket automatic updates from the FIDS sync backend
+        socket.on('fids-update', fetchData);
+        
+        return () => {
+            socket.off('fids-update', fetchData);
+        };
+    }, [selectedFlight?.id]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -472,9 +608,19 @@ const FlightManagement = () => {
                         <p style={{ color: '#475569' }}>No flights found for this filter.</p>
                     </div>
                 ) : filtered.map(flight => (
-                    <FlightCard key={flight.id} flight={flight} onDelete={handleDelete} onStatusChange={handleStatusChange} />
+                    <FlightCard
+                        key={flight.id}
+                        flight={flight}
+                        onDelete={handleDelete}
+                        onStatusChange={handleStatusChange}
+                        onClick={() => setSelectedFlight(flight)}
+                    />
                 ))}
             </div>
+
+            {selectedFlight && (
+                <FlightDetailModal flight={selectedFlight} onClose={() => setSelectedFlight(null)} />
+            )}
         </div>
     );
 };
