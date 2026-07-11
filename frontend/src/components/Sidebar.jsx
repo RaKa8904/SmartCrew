@@ -66,10 +66,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
     return (
         <div className={`h-screen flex flex-col fixed left-0 top-0 z-50 transition-all duration-300 ${isOpen ? 'w-64' : 'w-20'}`}
-            style={{ background: 'rgba(2, 6, 23, 0.95)', borderRight: '1px solid rgba(14, 165, 233, 0.1)', backdropFilter: 'blur(20px)' }}>
+            style={{ background: 'var(--sidebar-bg)', borderRight: '1px solid var(--sidebar-border)', backdropFilter: 'blur(20px)' }}>
 
             {/* Logo */}
-            <div className="px-6 pt-6 pb-5 border-b" style={{ borderColor: 'rgba(14, 165, 233, 0.1)' }}>
+            <div className="px-6 pt-6 pb-5 border-b" style={{ borderColor: 'var(--sidebar-border)' }}>
                 {/* Toggle Button */}
                 <button 
                     onClick={toggleSidebar}
@@ -80,22 +80,22 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
                 <div className={`flex items-center gap-3 mb-4 transition-all ${!isOpen ? 'justify-center' : ''}`}>
                     <div className="relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                        style={{ background: 'linear-gradient(135deg, #0284c7, #0ea5e9)', boxShadow: '0 0 20px rgba(14, 165, 233, 0.35)' }}>
+                        style={{ background: 'var(--btn-primary-bg)', boxShadow: '0 0 20px var(--logo-glow)' }}>
                         <Plane className="text-white shrink-0" size={20} />
                         <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-slate-950 pulse-dot" />
                     </div>
                     {isOpen && (
                         <div className="overflow-hidden transition-all duration-300 whitespace-nowrap">
                             <h1 className="font-bold text-white leading-tight text-base tracking-tight">
-                                Smart<span style={{ color: '#0ea5e9' }}>Crew</span>
+                                Smart<span style={{ color: 'var(--electric)' }}>Crew</span>
                             </h1>
-                            <p className="text-xs" style={{ color: '#475569', fontFamily: "'Space Mono', monospace" }}>OPS CENTER</p>
+                            <p className="text-xs" style={{ color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace" }}>OPS CENTER</p>
                         </div>
                     )}
                 </div>
                 {/* UTC Clock */}
                 {isOpen && (
-                    <div className="flex items-center justify-between px-3 py-2 rounded-lg" style={{ background: 'rgba(14, 165, 233, 0.06)', border: '1px solid rgba(14, 165, 233, 0.1)' }}>
+                    <div className="flex items-center justify-between px-3 py-2 rounded-lg" style={{ background: 'var(--clock-bg)', border: '1px solid var(--clock-border)' }}>
                         <span className="hud-label">UTC</span>
                         <span className="hud-value text-xs">
                             {currentTime.toUTCString().slice(17, 25)}
@@ -126,10 +126,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </nav>
 
             {/* User Profile */}
-            <div className="px-3 py-4 border-t" style={{ borderColor: 'rgba(14, 165, 233, 0.08)' }}>
+            <div className="px-3 py-4 border-t" style={{ borderColor: 'var(--sidebar-border)' }}>
                 <div className={`flex items-center gap-3 mb-3 ${!isOpen ? 'justify-center px-0' : 'px-1'}`}>
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0"
-                        style={{ background: 'rgba(14, 165, 233, 0.12)', border: '1px solid rgba(14, 165, 233, 0.2)', color: '#0ea5e9' }}
+                        style={{ background: 'var(--clock-bg)', border: '1px solid var(--clock-border)', color: 'var(--electric)' }}
                         title={!isOpen ? user?.name : ''}>
                         {user?.name?.[0]}
                     </div>
@@ -144,9 +144,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     onClick={logout}
                     title={!isOpen ? "Sign Out" : ""}
                     className={`flex items-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all ${!isOpen ? 'justify-center w-10 h-10 mx-auto' : 'px-3 w-full'}`}
-                    style={{ color: '#64748b' }}
+                    style={{ color: 'var(--text-muted)' }}
                     onMouseEnter={e => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.color = '#64748b'; e.currentTarget.style.background = 'transparent'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
                 >
                     <LogOut size={16} className="shrink-0" />
                     {isOpen && <span className="whitespace-nowrap">Sign Out</span>}

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useRules } from '../context/RulesContext';
+import { useTheme } from '../context/ThemeContext';
 import {
     Plane, Users, CheckCircle, AlertTriangle, TrendingUp,
     Settings, Download, ExternalLink, Activity, Clock, Radio
@@ -36,6 +37,14 @@ const AnimatedNumber = ({ value }) => {
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const { loading: rulesLoading, getRuleValue } = useRules();
+    const { theme } = useTheme();
+
+    const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const chartAxisColor = isDark ? '#94a3b8' : '#475569';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
+    const tooltipBg = isDark ? '#121212' : '#ffffff';
+    const tooltipBorder = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)';
+    const tooltipTextColor = isDark ? '#f8fafc' : '#0f172a';
 
     const [stats, setStats] = useState({ totalFlights: 0, totalCrew: 0, scheduledFlights: 0, conflicts: 0 });
     const [utilizationData, setUtilizationData] = useState([]);
@@ -198,11 +207,13 @@ const AdminDashboard = () => {
                     <div className="h-56">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={utilizationData} margin={{ top: 0, right: 8, left: -20, bottom: 40 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(14,165,233,0.06)" vertical={false} />
-                                <XAxis dataKey="crewName" stroke="#334155" fontSize={10} tickLine={false} axisLine={false}
+                                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                                <XAxis dataKey="crewName" stroke={chartAxisColor} fontSize={10} tickLine={false} axisLine={false}
                                     angle={-30} textAnchor="end" interval={0} />
-                                <YAxis stroke="#334155" fontSize={11} tickLine={false} axisLine={false} unit="%" domain={[0, 100]} />
-                                <Tooltip contentStyle={{ backgroundColor: '#020617', borderColor: 'rgba(14,165,233,0.2)', borderRadius: '12px', color: '#fff', fontSize: '12px' }}
+                                <YAxis stroke={chartAxisColor} fontSize={11} tickLine={false} axisLine={false} unit="%" domain={[0, 100]} />
+                                <Tooltip contentStyle={{ backgroundColor: tooltipBg, borderColor: tooltipBorder, borderRadius: '12px', color: tooltipTextColor, fontSize: '12px' }}
+                                    itemStyle={{ color: tooltipTextColor }}
+                                    labelStyle={{ color: tooltipTextColor }}
                                     formatter={v => [`${v}%`, 'Utilization']} cursor={{ fill: 'rgba(14,165,233,0.04)' }} />
                                 <Bar dataKey="utilizationPercent" fill="url(#utilGrad)" radius={[6, 6, 0, 0]} barSize={28} />
                                 <defs>
@@ -234,8 +245,10 @@ const AdminDashboard = () => {
                                         <Cell key={index} fill={PIE_COLORS[index]} />
                                     ))}
                                 </Pie>
-                                <Tooltip contentStyle={{ backgroundColor: '#020617', borderColor: 'rgba(14,165,233,0.2)', borderRadius: '12px', color: '#fff', fontSize: '12px' }} />
-                                <Legend iconType="circle" iconSize={8} formatter={(v) => <span style={{ color: '#94a3b8', fontSize: '11px' }}>{v}</span>} />
+                                <Tooltip contentStyle={{ backgroundColor: tooltipBg, borderColor: tooltipBorder, borderRadius: '12px', color: tooltipTextColor, fontSize: '12px' }}
+                                    itemStyle={{ color: tooltipTextColor }}
+                                    labelStyle={{ color: tooltipTextColor }} />
+                                <Legend iconType="circle" iconSize={8} formatter={(v) => <span style={{ color: chartAxisColor, fontSize: '11px' }}>{v}</span>} />
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
@@ -253,10 +266,12 @@ const AdminDashboard = () => {
                     <div className="h-56">
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={historicalDelays} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(t) => t.substring(5)} />
-                                <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
-                                <Tooltip contentStyle={{ backgroundColor: '#020617', borderColor: 'rgba(236,72,153,0.2)', borderRadius: '12px', color: '#fff', fontSize: '12px' }} />
+                                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                                <XAxis dataKey="date" stroke={chartAxisColor} fontSize={11} tickLine={false} axisLine={false} tickFormatter={(t) => t.substring(5)} />
+                                <YAxis stroke={chartAxisColor} fontSize={11} tickLine={false} axisLine={false} />
+                                <Tooltip contentStyle={{ backgroundColor: tooltipBg, borderColor: tooltipBorder, borderRadius: '12px', color: tooltipTextColor, fontSize: '12px' }}
+                                    itemStyle={{ color: tooltipTextColor }}
+                                    labelStyle={{ color: tooltipTextColor }} />
                                 <Line type="monotone" dataKey="totalFlights" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3, fill: '#3b82f6', strokeWidth: 0 }} name="Total Flights" />
                                 <Line type="monotone" dataKey="delayedFlights" stroke="#ec4899" strokeWidth={2} dot={{ r: 3, fill: '#ec4899', strokeWidth: 0 }} name="Delayed Flights" />
                             </LineChart>
@@ -276,11 +291,13 @@ const AdminDashboard = () => {
                     <div className="h-56">
                         <ResponsiveContainer width="100%" height="100%">
                             <ScatterChart margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                                <XAxis type="number" dataKey="dutyHours" name="Duty Hours" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
-                                <YAxis type="number" dataKey="fatigueScore" name="Fatigue Score" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+                                <XAxis type="number" dataKey="dutyHours" name="Duty Hours" stroke={chartAxisColor} fontSize={11} tickLine={false} axisLine={false} />
+                                <YAxis type="number" dataKey="fatigueScore" name="Fatigue Score" stroke={chartAxisColor} fontSize={11} tickLine={false} axisLine={false} />
                                 <ZAxis type="number" range={[50, 200]} />
-                                <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ backgroundColor: '#020617', borderColor: 'rgba(239,68,68,0.2)', borderRadius: '12px', color: '#fff', fontSize: '12px' }} />
+                                <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ backgroundColor: tooltipBg, borderColor: tooltipBorder, borderRadius: '12px', color: tooltipTextColor, fontSize: '12px' }}
+                                    itemStyle={{ color: tooltipTextColor }}
+                                    labelStyle={{ color: tooltipTextColor }} />
                                 <Scatter name="Crew Fatigue" data={crewFatigue} fill="#ef4444" />
                             </ScatterChart>
                         </ResponsiveContainer>

@@ -37,26 +37,26 @@ const LoginPage = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden"
-            style={{ background: '#020617' }}>
+            style={{ background: 'var(--bg-base)' }}>
 
             {/* Animated aviation background */}
             <div className="absolute inset-0 pointer-events-none">
                 {/* Grid */}
                 <div style={{
                     position: 'absolute', inset: 0,
-                    backgroundImage: 'linear-gradient(rgba(14, 165, 233, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(14, 165, 233, 0.04) 1px, transparent 1px)',
+                    backgroundImage: 'linear-gradient(var(--radar-color) 1px, transparent 1px), linear-gradient(90deg, var(--radar-color) 1px, transparent 1px)',
                     backgroundSize: '60px 60px',
                 }} />
                 {/* Glows */}
-                <div className="absolute -top-20 -left-20 w-[600px] h-[600px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, transparent 70%)' }} />
-                <div className="absolute -bottom-20 -right-20 w-[400px] h-[400px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(245, 158, 11, 0.06) 0%, transparent 70%)' }} />
+                <div className="absolute -top-20 -left-20 w-[600px] h-[600px] rounded-full" style={{ background: 'radial-gradient(circle, var(--electric-glow) 0%, transparent 70%)' }} />
+                <div className="absolute -bottom-20 -right-20 w-[400px] h-[400px] rounded-full" style={{ background: 'radial-gradient(circle, var(--amber-glow) 0%, transparent 70%)' }} />
                 {/* Runway lines */}
                 {[...Array(8)].map((_, i) => (
                     <div key={i}
                         className="absolute bottom-0 left-1/2 -translate-x-1/2"
                         style={{
                             width: '4px', height: '40px',
-                            background: 'rgba(245, 158, 11, 0.4)',
+                            background: 'var(--amber)',
                             bottom: `${10 + i * 60}px`,
                             borderRadius: '2px',
                             opacity: 1 - i * 0.1,
@@ -77,20 +77,20 @@ const LoginPage = () => {
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: 0.1, duration: 0.4 }}
                         className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6"
-                        style={{ background: 'linear-gradient(135deg, #0284c7, #0ea5e9)', boxShadow: '0 0 40px rgba(14, 165, 233, 0.4)' }}
+                        style={{ background: 'var(--btn-primary-bg)', boxShadow: '0 0 40px var(--electric-glow)' }}
                     >
                         <Plane className="text-white" size={30} />
                     </motion.div>
                     <h1 className="text-3xl font-bold text-white mb-1 tracking-tight">SmartCrew Portal</h1>
                     <div className="flex items-center justify-center gap-2 mt-2">
-                        <span style={{ width: '24px', height: '1px', background: 'rgba(14,165,233,0.4)' }} />
+                        <span style={{ width: '24px', height: '1px', background: 'var(--electric)' }} />
                         <p className="hud-label">AVIATION OPERATIONS CENTER</p>
-                        <span style={{ width: '24px', height: '1px', background: 'rgba(14,165,233,0.4)' }} />
+                        <span style={{ width: '24px', height: '1px', background: 'var(--electric)' }} />
                     </div>
                 </div>
 
                 {/* Login Card */}
-                <div className="glass-card p-8 shadow-2xl" style={{ boxShadow: '0 0 60px rgba(14, 165, 233, 0.08)' }}>
+                <div className="glass-card p-8 shadow-2xl" style={{ boxShadow: '0 0 60px var(--electric-glow)' }}>
                     <form onSubmit={handleSubmit} className="space-y-5">
                         {error && (
                             <div className="p-3 rounded-xl text-sm" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171' }}>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
-import { Plane, Plus, Trash2, MapPin, Clock, Loader2, Radio, Users, CheckCircle2, AlertTriangle, XCircle, UploadCloud, FileUp, CheckCircle, X, AlertCircle, RefreshCw } from 'lucide-react';
+import { Plane, Plus, Trash2, MapPin, Clock, Loader2, Radio, Users, CheckCircle2, AlertTriangle, XCircle, UploadCloud, FileUp, CheckCircle, X, AlertCircle, RefreshCw, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import socket from '../services/socket';
 
@@ -390,6 +390,10 @@ const FlightManagement = () => {
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [toastMessage, setToastMessage] = useState(null);
     const [filter, setFilter] = useState('all');
+    const [routeTypeFilter, setRouteTypeFilter] = useState('all');
+    const [hubFilter, setHubFilter] = useState('all');
+    const [timeFilter, setTimeFilter] = useState('all');
+    const [searchQuery, setSearchQuery] = useState('');
     const [selectedFlight, setSelectedFlight] = useState(null);
     const [formData, setFormData] = useState({
         flightNumber: '', origin: '', destination: '',
@@ -463,7 +467,42 @@ const FlightManagement = () => {
         } catch (err) { console.error('Status update failed', err); }
     };
 
-    const filtered = filter === 'all' ? flights : flights.filter(f => f.status === filter);
+    const DOMESTIC_AIRPORTS = ['DEL', 'BOM', 'BLR', 'MAA', 'HYD', 'CCU', 'GOI', 'COK'];
+
+    const filtered = flights.filter(f => {
+        // 1. Status Filter
+        if (filter !== 'all' && f.status !== filter) return false;
+
+        // 2. Search Query
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            const matches = f.flightNumber.toLowerCase().includes(q) ||
+                            f.origin.toLowerCase().includes(q) ||
+                            f.destination.toLowerCase().includes(q) ||
+                            f.aircraftType.toLowerCase().includes(q);
+            if (!matches) return false;
+        }
+
+        // 3. Route Type Filter (Domestic / International)
+        const isDom = DOMESTIC_AIRPORTS.includes(f.origin) && DOMESTIC_AIRPORTS.includes(f.destination);
+        if (routeTypeFilter === 'domestic' && !isDom) return false;
+        if (routeTypeFilter === 'international' && isDom) return false;
+
+        // 4. Hub Filter (DEL / BOM)
+        if (hubFilter === 'del' && f.origin !== 'DEL' && f.destination !== 'DEL') return false;
+        if (hubFilter === 'bom' && f.origin !== 'BOM' && f.destination !== 'BOM') return false;
+
+        // 5. Timing Filter (based on Departure UTC hour)
+        if (timeFilter !== 'all') {
+            const depHour = new Date(f.departureTime).getUTCHours();
+            if (timeFilter === 'morning' && (depHour < 5 || depHour >= 12)) return false;
+            if (timeFilter === 'afternoon' && (depHour < 12 || depHour >= 17)) return false;
+            if (timeFilter === 'evening' && (depHour < 17 || depHour >= 22)) return false;
+            if (timeFilter === 'night' && (depHour >= 5 && depHour < 22)) return false;
+        }
+
+        return true;
+    });
 
     const counts = {
         all: flights.length,
@@ -529,19 +568,73 @@ const FlightManagement = () => {
             </div>
 
             {/* Status Filter Tabs */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
                 {[['all', 'All Flights'], ['on-time', 'On Time'], ['delayed', 'Delayed'], ['cancelled', 'Cancelled']].map(([key, label]) => (
                     <button key={key} onClick={() => setFilter(key)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer"
                         style={{
                             background: filter === key ? 'rgba(14,165,233,0.12)' : 'rgba(255,255,255,0.03)',
                             border: filter === key ? '1px solid rgba(14,165,233,0.3)' : '1px solid rgba(255,255,255,0.06)',
-                            color: filter === key ? '#0ea5e9' : '#64748b'
+                            color: filter === key ? 'var(--electric)' : '#64748b'
                         }}>
                         {label}
-                        <span className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'rgba(255,255,255,0.06)' }}>{counts[key]}</span>
+                        <span className="px-1.5 py-0.5 rounded text-xs animate-pulse-slow" style={{ background: 'rgba(255,255,255,0.06)' }}>{counts[key]}</span>
                     </button>
                 ))}
+            </div>
+
+            {/* Advanced Filters Toolbar */}
+            <div className="glass-card p-4 flex flex-col lg:flex-row gap-4 items-center justify-between">
+                {/* Search Bar */}
+                <div className="relative w-full lg:w-72">
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input 
+                        type="text"
+                        placeholder="Search flight number, origin, dest..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="avio-input pl-9"
+                    />
+                </div>
+
+                {/* Dropdowns */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full lg:w-auto flex-1 max-w-2xl">
+                    <div>
+                        <select 
+                            className="avio-select"
+                            value={routeTypeFilter}
+                            onChange={(e) => setRouteTypeFilter(e.target.value)}
+                        >
+                            <option value="all">✈ All Flight Types</option>
+                            <option value="domestic">🇮🇳 Domestic Only</option>
+                            <option value="international">🌐 International Only</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select 
+                            className="avio-select"
+                            value={hubFilter}
+                            onChange={(e) => setHubFilter(e.target.value)}
+                        >
+                            <option value="all">🏢 All Hub Connections</option>
+                            <option value="del">🇮🇳 Delhi Hub (DEL)</option>
+                            <option value="bom">🇮🇳 Mumbai Hub (BOM)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select 
+                            className="avio-select"
+                            value={timeFilter}
+                            onChange={(e) => setTimeFilter(e.target.value)}
+                        >
+                            <option value="all">⏱ All Departure Times</option>
+                            <option value="morning">🌅 Morning (05:00 - 12:00)</option>
+                            <option value="afternoon">☀️ Afternoon (12:00 - 17:00)</option>
+                            <option value="evening">🌇 Evening (17:00 - 22:00)</option>
+                            <option value="night">🌙 Night (22:00 - 05:00)</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             {/* Add Flight Form */}
