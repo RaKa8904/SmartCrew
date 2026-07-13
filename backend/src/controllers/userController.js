@@ -34,10 +34,11 @@ const register = async (req, res) => {
         }
 
         const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        const isProd = process.env.NODE_ENV === 'production';
         res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'lax',
             maxAge: 24 * 60 * 60 * 1000 // 1 day
         });
         res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
@@ -61,10 +62,11 @@ const login = async (req, res) => {
         }
 
         const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        const isProd = process.env.NODE_ENV === 'production';
         res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'lax',
             maxAge: 24 * 60 * 60 * 1000 // 1 day
         });
         res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
@@ -86,10 +88,11 @@ const getProfile = async (req, res) => {
 };
 
 const logout = async (req, res) => {
+    const isProd = process.env.NODE_ENV === 'production';
     res.clearCookie('token', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax'
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax'
     });
     res.json({ message: 'Logged out successfully' });
 };
