@@ -19,11 +19,24 @@ const portalRoutes = require('./routes/crewPortalRoutes');
 const { seedDefaultRules } = require('./controllers/ruleController');
 const { startFleetTracker } = require('./services/fleetTrackerService');
 
+const allowedOrigins = [
+    'http://localhost:5173',
+    'https://smartcrew.onrender.com'
+];
+if (process.env.FRONTEND_URL) {
+    process.env.FRONTEND_URL.split(',').forEach(o => {
+        const trimmed = o.trim();
+        if (trimmed && !allowedOrigins.includes(trimmed)) {
+            allowedOrigins.push(trimmed);
+        }
+    });
+}
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+        origin: allowedOrigins,
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
         credentials: true
     }
@@ -34,7 +47,6 @@ const PORT = process.env.PORT || 5000;
 app.use(helmet());
 app.use(cookieParser());
 
-const allowedOrigins = [process.env.FRONTEND_URL || 'http://localhost:5173'];
 app.use(cors({
     origin: (origin, callback) => {
         if (!origin || allowedOrigins.includes(origin)) {
