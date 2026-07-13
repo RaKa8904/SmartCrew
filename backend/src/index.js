@@ -2,6 +2,9 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
@@ -19,13 +22,51 @@ const { startFleetTracker } = require('./services/fleetTrackerService');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: { origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE'] }
+    cors: {
+        origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        credentials: true
+    }
 });
 
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(helmet());
+app.use(cookieParser());
+
+const allowedOrigins = [process.env.FRONTEND_URL || 'http://localhost:5173'];
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true
+}));
+
 app.use(express.json());
+
+// Rate Limiters
+const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    message: { message: 'Too many requests from this IP, please try again after 15 minutes' }
+});
+
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 15,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    message: { message: 'Too many authentication attempts, please try again after 15 minutes' }
+});
+
+// Apply global rate limiter to all API endpoints
+app.use('/api', globalLimiter);
 
 // Request logger for debugging mobile connectivity
 app.use((req, res, next) => {
@@ -44,7 +85,7 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => console.log('Client disconnected:', socket.id));
 });
 
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/flights', flightRoutes);
 app.use('/api/crew', crewRoutes);
 app.use('/api/schedules', scheduleRoutes);
