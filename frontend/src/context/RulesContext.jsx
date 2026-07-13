@@ -1,9 +1,11 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import api from '../services/api';
+import { useAuth } from './AuthContext';
 
 const RulesContext = createContext();
 
 export const RulesProvider = ({ children }) => {
+    const { user } = useAuth();
     const [rules, setRules] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -25,13 +27,13 @@ export const RulesProvider = ({ children }) => {
     }, []);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
+        if (user) {
             fetchRules();
         } else {
+            setRules([]);
             setLoading(false);
         }
-    }, [fetchRules]);
+    }, [user, fetchRules]);
 
     // Update a single rule by id — PUT /api/rules/:id
     const updateRule = useCallback(async (id, value) => {
