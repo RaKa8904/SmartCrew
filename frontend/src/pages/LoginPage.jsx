@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Plane, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const DEMO_CREDS = [
     { role: 'Admin', email: 'admin@airline.com', pw: 'password123', color: '#f59e0b' },
@@ -11,11 +11,24 @@ const DEMO_CREDS = [
     { role: 'Cabin', email: 'cabin1@airline.com', pw: 'password123', color: '#34d399' },
 ];
 
+// Detailed Boeing Airliner Silhouette SVG
+const Boeing777SVG = () => (
+    <svg width="120" height="120" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-[0_0_20px_rgba(14,165,233,0.8)]">
+        <path
+            d="M12 2C11.5 2 11 3.5 11 6V11L2 14.5V17L11 15V20L8.5 21.5V23L12 22L15.5 23V21.5L13 20V15L22 17V14.5L13 11V6C13 3.5 12.5 2 12 2Z"
+            fill="#38bdf8"
+            stroke="#e0f2fe"
+            strokeWidth="0.5"
+        />
+    </svg>
+);
+
 const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [takingOff, setTakingOff] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
 
@@ -25,11 +38,14 @@ const LoginPage = () => {
         setError('');
         try {
             await login(email, password);
-            navigate('/dashboard');
+            setTakingOff(true);
+            setTimeout(() => {
+                navigate('/dashboard');
+            }, 1400);
         } catch (err) {
             setError(err.response?.data?.message || 'Invalid credentials. Check email and password.');
-        } finally {
             setLoading(false);
+            setTakingOff(false);
         }
     };
 
@@ -50,7 +66,7 @@ const LoginPage = () => {
                 {/* Glows */}
                 <div className="absolute -top-20 -left-20 w-[600px] h-[600px] rounded-full" style={{ background: 'radial-gradient(circle, var(--electric-glow) 0%, transparent 70%)' }} />
                 <div className="absolute -bottom-20 -right-20 w-[400px] h-[400px] rounded-full" style={{ background: 'radial-gradient(circle, var(--amber-glow) 0%, transparent 70%)' }} />
-                {/* Runway lines */}
+                {/* Runway center lines */}
                 {[...Array(8)].map((_, i) => (
                     <div key={i}
                         className="absolute bottom-0 left-1/2 -translate-x-1/2"
@@ -63,6 +79,36 @@ const LoginPage = () => {
                         }} />
                 ))}
             </div>
+
+            {/* ─── BOEING AIRPLANE TAKEOFF ANIMATION ───────────────────────────────────────── */}
+            <AnimatePresence>
+                {takingOff && (
+                    <motion.div
+                        initial={{ y: 250, opacity: 0, scale: 0.6, x: '-50%' }}
+                        animate={{
+                            y: -900,
+                            opacity: [0, 1, 1, 0.8, 0],
+                            scale: [0.6, 1.2, 2.2],
+                            rotate: [0, -5, -20]
+                        }}
+                        transition={{ duration: 1.4, ease: [0.4, 0, 0.2, 1] }}
+                        className="fixed bottom-0 left-1/2 z-50 pointer-events-none flex flex-col items-center"
+                    >
+                        {/* Jet Thruster Exhaust Glow */}
+                        <div className="relative">
+                            <Boeing777SVG />
+                            <motion.div
+                                animate={{ scale: [1, 1.4, 1], opacity: [0.8, 1, 0.8] }}
+                                transition={{ repeat: Infinity, duration: 0.2 }}
+                                className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-8 h-16 rounded-full bg-gradient-to-b from-sky-400 via-amber-400 to-transparent blur-sm"
+                            />
+                            {/* Twin Engine Contrails */}
+                            <div className="absolute -bottom-20 left-4 w-1.5 h-24 bg-white/40 blur-[2px]" />
+                            <div className="absolute -bottom-20 right-4 w-1.5 h-24 bg-white/40 blur-[2px]" />
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <motion.div
                 initial={{ opacity: 0, y: 24 }}

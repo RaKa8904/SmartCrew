@@ -179,102 +179,43 @@ async function main() {
     console.log(`✅ ${createdFlights.length} flights created...`);
 
     // ─── SCHEDULES ────────────────────────────────────────────────────────────
-    // Assign crew to flights 0–18 (leaving last 6 unscheduled for demo)
-    const scheduleAssignments = [
-        // EK101 (DXB→LHR): Capt. Wilson + Sarah Jenkins + Mei Lin + Yuki
-        { flightId: createdFlights[0].id, crewId: c1.id, assignedById: admin.id },
-        { flightId: createdFlights[0].id, crewId: c6.id, assignedById: admin.id },
-        { flightId: createdFlights[0].id, crewId: c8.id, assignedById: admin.id },
-        { flightId: createdFlights[0].id, crewId: c12.id, assignedById: admin.id },
+    // Programmatically assign EXACTLY 2 Pilots + 3 Cabin Crew per flight (Flights 0 to 18)
+    // Round-robin selection ensures equal workload distribution across all crew members
+    const allPilots = [c1, c2, c3, c4, c5, ...additionalCrew.filter(c => c.crewType === 'pilot')];
+    const allCabin = [c6, c7, c8, c9, c10, c11, c12, ...additionalCrew.filter(c => c.crewType === 'cabin')]; // c13 Elena on leave
 
-        // EK102 (LHR→DXB): Capt. Sharma + David + Carlos
-        { flightId: createdFlights[1].id, crewId: c2.id, assignedById: admin.id },
-        { flightId: createdFlights[1].id, crewId: c7.id, assignedById: admin.id },
-        { flightId: createdFlights[1].id, crewId: c9.id, assignedById: admin.id },
+    const scheduleAssignments = [];
+    let pilotIdx = 0;
+    let cabinIdx = 0;
 
-        // EK201 (DXB→BOM): F/O Marcus + Anya Petrova
-        { flightId: createdFlights[2].id, crewId: c3.id, assignedById: admin.id },
-        { flightId: createdFlights[2].id, crewId: c10.id, assignedById: admin.id },
+    // Assign to first 19 flights
+    const flightsToSchedule = createdFlights.slice(0, 19);
 
-        // EK202 (BOM→DXB): F/O Aisha + Carlos
-        { flightId: createdFlights[3].id, crewId: c4.id, assignedById: admin.id },
-        { flightId: createdFlights[3].id, crewId: c9.id, assignedById: admin.id },
+    for (const flight of flightsToSchedule) {
+        // Pick 2 pilots
+        for (let p = 0; p < 2; p++) {
+            const pilot = allPilots[pilotIdx % allPilots.length];
+            pilotIdx++;
+            scheduleAssignments.push({
+                flightId: flight.id,
+                crewId: pilot.id,
+                assignedById: admin.id,
+            });
+        }
 
-        // QR301 (DOH→JFK): Capt. Erikson + Omar Hassan + Mei
-        { flightId: createdFlights[4].id, crewId: c5.id, assignedById: admin.id },
-        { flightId: createdFlights[4].id, crewId: c11.id, assignedById: scheduler.id },
-        { flightId: createdFlights[4].id, crewId: c8.id, assignedById: scheduler.id },
+        // Pick 3 cabin crew
+        for (let c = 0; c < 3; c++) {
+            const cabin = allCabin[cabinIdx % allCabin.length];
+            cabinIdx++;
+            scheduleAssignments.push({
+                flightId: flight.id,
+                crewId: cabin.id,
+                assignedById: admin.id,
+            });
+        }
+    }
 
-        // QR302 (JFK→DOH): Capt. Wilson + Sarah Jenkins
-        { flightId: createdFlights[5].id, crewId: c1.id, assignedById: admin.id },
-        { flightId: createdFlights[5].id, crewId: c6.id, assignedById: admin.id },
-
-        // SQ401 (SIN→SYD): Capt. Sharma + David + Anya
-        { flightId: createdFlights[6].id, crewId: c2.id, assignedById: scheduler.id },
-        { flightId: createdFlights[6].id, crewId: c7.id, assignedById: scheduler.id },
-        { flightId: createdFlights[6].id, crewId: c10.id, assignedById: scheduler.id },
-
-        // SQ402 (SYD→SIN, CANCELLED): F/O Marcus
-        { flightId: createdFlights[7].id, crewId: c3.id, assignedById: admin.id },
-
-        // AI501 (DEL→CDG): Capt. Erikson + Omar
-        { flightId: createdFlights[8].id, crewId: c5.id, assignedById: admin.id },
-        { flightId: createdFlights[8].id, crewId: c11.id, assignedById: admin.id },
-
-        // BA601 (LHR→ORD): F/O Aisha + Sarah
-        { flightId: createdFlights[9].id, crewId: c4.id, assignedById: scheduler.id },
-        { flightId: createdFlights[9].id, crewId: c6.id, assignedById: scheduler.id },
-
-        // BA602 (ORD→LHR): Capt. Wilson + David + Carlos
-        { flightId: createdFlights[10].id, crewId: c1.id, assignedById: admin.id },
-        { flightId: createdFlights[10].id, crewId: c7.id, assignedById: admin.id },
-        { flightId: createdFlights[10].id, crewId: c9.id, assignedById: admin.id },
-
-        // EK303 (DXB→SIN): Capt. Sharma + Mei + Yuki
-        { flightId: createdFlights[11].id, crewId: c2.id, assignedById: admin.id },
-        { flightId: createdFlights[11].id, crewId: c8.id, assignedById: admin.id },
-        { flightId: createdFlights[11].id, crewId: c12.id, assignedById: admin.id },
-
-        // AF701 (CDG→NRT): F/O Marcus + Anya
-        { flightId: createdFlights[12].id, crewId: c3.id, assignedById: scheduler.id },
-        { flightId: createdFlights[12].id, crewId: c10.id, assignedById: scheduler.id },
-
-        // LH801 (FRA→LAX): Capt. Erikson + Omar
-        { flightId: createdFlights[13].id, crewId: c5.id, assignedById: admin.id },
-        { flightId: createdFlights[13].id, crewId: c11.id, assignedById: admin.id },
-
-        // TK901 (IST→JFK): F/O Aisha + Sarah
-        { flightId: createdFlights[14].id, crewId: c4.id, assignedById: scheduler.id },
-        { flightId: createdFlights[14].id, crewId: c6.id, assignedById: scheduler.id },
-
-        // CX1001 (HKG→LHR): Capt. Wilson + David + Carlos
-        { flightId: createdFlights[15].id, crewId: c1.id, assignedById: admin.id },
-        { flightId: createdFlights[15].id, crewId: c7.id, assignedById: admin.id },
-        { flightId: createdFlights[15].id, crewId: c9.id, assignedById: admin.id },
-
-        // EY1101 (AUH→MEL): Capt. Sharma + Mei + Anya
-        { flightId: createdFlights[16].id, crewId: c2.id, assignedById: admin.id },
-        { flightId: createdFlights[16].id, crewId: c8.id, assignedById: admin.id },
-        { flightId: createdFlights[16].id, crewId: c10.id, assignedById: admin.id },
-
-        // UA1201 (SFO→NRT) - March 15 11:00 to March 16 14:00
-        { flightId: createdFlights[17].id, crewId: c3.id, assignedById: scheduler.id },
-        { flightId: createdFlights[17].id, crewId: c11.id, assignedById: scheduler.id },
-
-        // MH1301 (KUL→LHR)
-        { flightId: createdFlights[18].id, crewId: c5.id, assignedById: admin.id },
-        { flightId: createdFlights[18].id, crewId: c6.id, assignedById: admin.id },
-
-        // 🚨 INTENTIONAL CONFLICTS FOR TESTING 🚨
-        // EY1101 (AUH→MEL) departs March 15 08:15 to March 15 23:15
-        // Assigning c3 (F/O Marcus) and c11 (Omar) to EY1101, but they are already on UA1201 from SFO beginning Mar 15 11:00
-        { flightId: createdFlights[16].id, crewId: c3.id, assignedById: scheduler.id },
-        { flightId: createdFlights[16].id, crewId: c11.id, assignedById: scheduler.id },
-        // Assigning c5 (Capt Erikson) to both AF701 (Mar 13 10:30) and LH801 (Mar 13 13:00) which overlap completely
-        { flightId: createdFlights[12].id, crewId: c5.id, assignedById: admin.id },
-    ];
-
-    // Flights 19–24 (EK404, AA1401, SQ501, NH1501, EK550, WB1601) left UNSCHEDULED for demo
+    // Flights 19–24 left UNSCHEDULED for AI Auto-Schedule demo
 
     for (const s of scheduleAssignments) {
         await prisma.schedule.create({ data: s });

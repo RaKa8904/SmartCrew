@@ -119,13 +119,21 @@ const generateSchedule = async (actingUserId) => {
 
         if (availableCrew.length === 0) continue;
 
-        // Build workload map for scoring
+        // Build workload map for scoring (including in-run assignments for equal load balancing)
+        const flightDurationHours = (new Date(flight.arrivalTime) - new Date(flight.departureTime)) / 3600000;
         const workloadMap = {};
         allCrew.forEach(c => {
-            workloadMap[c.id] = c.schedules.reduce((acc, s) => {
+            let total = c.schedules.reduce((acc, s) => {
                 if (s.flight) acc += (new Date(s.flight.arrivalTime) - new Date(s.flight.departureTime)) / 3600000;
                 return acc;
             }, 0);
+
+            // Add hours from in-run assignments
+            const inRun = inRunCrewFlights[c.id] || [];
+            inRun.forEach(f => {
+                total += (new Date(f.arrivalTime) - new Date(f.departureTime)) / 3600000;
+            });
+            workloadMap[c.id] = total;
         });
 
         // Calculate actual rest hours since each crew's last landing
@@ -136,17 +144,27 @@ const generateSchedule = async (actingUserId) => {
 
             const restHours = sortedPast.length > 0
                 ? (new Date(flight.departureTime) - new Date(sortedPast[0].flight.arrivalTime)) / 3600000
-                : 999; // No previous flights = max rest
+                : 999;
 
             return { ...crew, restHours };
         });
 
-        // Score, filter by min rest requirement, then pick top N
-        const scored = findBestCrew(crewWithRestHours, flight, workloadMap, { minRestHours, maxWeeklyHours })
+        // Separate by crewType
+        const pilots = crewWithRestHours.filter(c => c.crewType === 'pilot');
+        const cabinCrew = crewWithRestHours.filter(c => c.crewType === 'cabin');
+
+        // Score pilots and cabin crew separately
+        const scoredPilots = findBestCrew(pilots, flight, workloadMap, { minRestHours, maxWeeklyHours })
             .filter(c => c.restHours >= minRestHours);
 
-        const numToAssign = Math.min(minCrew, scored.length);
-        const selected = scored.slice(0, numToAssign);
+        const scoredCabin = findBestCrew(cabinCrew, flight, workloadMap, { minRestHours, maxWeeklyHours })
+            .filter(c => c.restHours >= minRestHours);
+
+        // Required: Exactly 2 pilots and At least 3 cabin crew
+        const selectedPilots = scoredPilots.slice(0, 2);
+        const selectedCabin = scoredCabin.slice(0, Math.max(3, Math.min(scoredCabin.length, 3)));
+
+        const selected = [...selectedPilots, ...selectedCabin];
 
         for (const c of selected) {
             newAssignments.push({
@@ -154,7 +172,7 @@ const generateSchedule = async (actingUserId) => {
                 crewId: c.id,
                 assignedById: resolvedActorId,
             });
-            // Track in-run assignment to avoid double-booking
+            // Track in-run assignment to avoid double-booking and balance workload
             if (!inRunCrewFlights[c.id]) inRunCrewFlights[c.id] = [];
             inRunCrewFlights[c.id].push(flight);
         }

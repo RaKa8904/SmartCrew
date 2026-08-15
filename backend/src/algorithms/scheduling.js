@@ -10,14 +10,14 @@ const calculateCrewScore = (crew, flight, workloadMap, idealRestHours = 12, maxW
     const restHours = crew.restHours ?? 24;
     const restScore = Math.min(restHours / idealRestHours, 1) * 100;
 
-    // Workload balance: favor crew with fewer scheduled hours
+    // Workload balance: strongly favor crew with lower accumulated scheduled hours
     const pastWorkload = workloadMap[crew.id] ?? 0;
     const workloadScore = Math.max(0, (maxWeeklyHours - pastWorkload) / maxWeeklyHours) * 100;
 
     // Availability: active = 100, anything else = 0
     const availabilityScore = crew.status === 'active' ? 100 : 0;
 
-    // Crew type preference for long-haul vs short-haul
+    // Qualification check
     const flightDuration = (new Date(flight.arrivalTime) - new Date(flight.departureTime)) / 3600000;
     const isLongHaul = flightDuration >= 6;
     const qualificationScore = (() => {
@@ -27,7 +27,8 @@ const calculateCrewScore = (crew, flight, workloadMap, idealRestHours = 12, maxW
         return 50;
     })();
 
-    return (restScore * 0.35) + (workloadScore * 0.35) + (availabilityScore * 0.15) + (qualificationScore * 0.15);
+    // 50% Workload Balance weight ensures equal distribution of flight hours across all crew
+    return (workloadScore * 0.50) + (restScore * 0.30) + (availabilityScore * 0.10) + (qualificationScore * 0.10);
 };
 
 const findBestCrew = (availableCrew, flight, workloadMap, rules = {}) => {
