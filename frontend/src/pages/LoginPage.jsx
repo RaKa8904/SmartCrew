@@ -11,16 +11,76 @@ const DEMO_CREDS = [
     { role: 'Cabin', email: 'cabin1@airline.com', pw: 'password123', color: '#34d399' },
 ];
 
-// Detailed Boeing Airliner Silhouette SVG
-const Boeing777SVG = () => (
-    <svg width="120" height="120" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-[0_0_20px_rgba(14,165,233,0.8)]">
-        <path
-            d="M12 2C11.5 2 11 3.5 11 6V11L2 14.5V17L11 15V20L8.5 21.5V23L12 22L15.5 23V21.5L13 20V15L22 17V14.5L13 11V6C13 3.5 12.5 2 12 2Z"
-            fill="#38bdf8"
-            stroke="#e0f2fe"
-            strokeWidth="0.5"
-        />
-    </svg>
+// Realistic Large Boeing 777-300ER Airliner SVG
+const RealisticBoeing777 = () => (
+    <div className="relative flex flex-col items-center drop-shadow-[0_0_35px_rgba(14,165,233,0.9)]">
+        <svg width="260" height="260" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="fuselageGrad" x1="0" y1="0" x2="100" y2="100">
+                    <stop offset="0%" stopColor="#f8fafc" />
+                    <stop offset="50%" stopColor="#cbd5e1" />
+                    <stop offset="100%" stopColor="#0ea5e9" />
+                </linearGradient>
+                <linearGradient id="wingGrad" x1="0" y1="0" x2="0" y2="100">
+                    <stop offset="0%" stopColor="#94a3b8" />
+                    <stop offset="100%" stopColor="#334155" />
+                </linearGradient>
+                <linearGradient id="engineGrad" x1="0" y1="0" x2="100" y2="0">
+                    <stop offset="0%" stopColor="#0284c7" />
+                    <stop offset="100%" stopColor="#0f172a" />
+                </linearGradient>
+            </defs>
+
+            {/* Main Wings with Raked Wingtips */}
+            <path d="M 50 42 L 5 62 L 7 68 L 48 55 Z" fill="url(#wingGrad)" stroke="#e2e8f0" strokeWidth="0.5" />
+            <path d="M 50 42 L 95 62 L 93 68 L 52 55 Z" fill="url(#wingGrad)" stroke="#e2e8f0" strokeWidth="0.5" />
+
+            {/* Raked Winglets */}
+            <path d="M 5 62 L 2 56 L 6 60 Z" fill="#0ea5e9" />
+            <path d="M 95 62 L 98 56 L 94 60 Z" fill="#0ea5e9" />
+
+            {/* Horizontal Stabilizers (Tail Wings) */}
+            <path d="M 50 82 L 26 92 L 28 96 L 49 88 Z" fill="#64748b" />
+            <path d="M 50 82 L 74 92 L 72 96 L 51 88 Z" fill="#64748b" />
+
+            {/* Fuselage (Body) */}
+            <path d="M 50 4 C 45 10 44 30 44 82 C 44 92 48 98 50 99 C 52 98 56 92 56 82 C 56 30 55 10 50 4 Z" fill="url(#fuselageGrad)" stroke="#f1f5f9" strokeWidth="0.6" />
+
+            {/* Cockpit Windows */}
+            <path d="M 47 12 C 48 10 52 10 53 12 L 54 15 L 46 15 Z" fill="#0284c7" />
+
+            {/* Vertical Tail Fin Shadow */}
+            <path d="M 49 76 L 50 72 L 51 76 L 50 96 Z" fill="#0ea5e9" />
+
+            {/* Dual GE90 Turbofan Jet Engines */}
+            <rect x="28" y="56" width="6" height="14" rx="3" fill="url(#engineGrad)" stroke="#38bdf8" strokeWidth="0.5" />
+            <rect x="66" y="56" width="6" height="14" rx="3" fill="url(#engineGrad)" stroke="#38bdf8" strokeWidth="0.5" />
+
+            {/* Red & Green Wingtip Navigation Lights */}
+            <circle cx="3" cy="57" r="1.5" fill="#ef4444" className="animate-ping" />
+            <circle cx="97" cy="57" r="1.5" fill="#22c55e" className="animate-ping" />
+        </svg>
+
+        {/* Dual Jet Engine Thruster Plumes */}
+        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-full flex justify-between px-16 pointer-events-none">
+            <motion.div
+                animate={{ scaleY: [1, 1.6, 1], opacity: [0.8, 1, 0.8] }}
+                transition={{ repeat: Infinity, duration: 0.15 }}
+                className="w-4 h-20 bg-gradient-to-b from-sky-400 via-amber-400 to-transparent rounded-full blur-[2px]"
+            />
+            <motion.div
+                animate={{ scaleY: [1, 1.6, 1], opacity: [0.8, 1, 0.8] }}
+                transition={{ repeat: Infinity, duration: 0.15 }}
+                className="w-4 h-20 bg-gradient-to-b from-sky-400 via-amber-400 to-transparent rounded-full blur-[2px]"
+            />
+        </div>
+
+        {/* High Altitude Twin Smoke Contrails */}
+        <div className="absolute -bottom-36 left-1/2 -translate-x-1/2 w-full flex justify-between px-16 pointer-events-none opacity-75">
+            <div className="w-2 h-36 bg-gradient-to-b from-white/60 to-transparent blur-[3px]" />
+            <div className="w-2 h-36 bg-gradient-to-b from-white/60 to-transparent blur-[3px]" />
+        </div>
+    </div>
 );
 
 const LoginPage = () => {
@@ -39,9 +99,10 @@ const LoginPage = () => {
         try {
             await login(email, password);
             setTakingOff(true);
+            // Slower 2.8s takeoff sequence
             setTimeout(() => {
                 navigate('/dashboard');
-            }, 1400);
+            }, 2800);
         } catch (err) {
             setError(err.response?.data?.message || 'Invalid credentials. Check email and password.');
             setLoading(false);
@@ -71,41 +132,30 @@ const LoginPage = () => {
                     <div key={i}
                         className="absolute bottom-0 left-1/2 -translate-x-1/2"
                         style={{
-                            width: '4px', height: '40px',
+                            width: '6px', height: '44px',
                             background: 'var(--amber)',
                             bottom: `${10 + i * 60}px`,
-                            borderRadius: '2px',
+                            borderRadius: '3px',
                             opacity: 1 - i * 0.1,
                         }} />
                 ))}
             </div>
 
-            {/* ─── BOEING AIRPLANE TAKEOFF ANIMATION ───────────────────────────────────────── */}
+            {/* ─── SLOWER, REALISTIC BOEING 777 TAKEOFF ANIMATION ──────────────────────────── */}
             <AnimatePresence>
                 {takingOff && (
                     <motion.div
-                        initial={{ y: 250, opacity: 0, scale: 0.6, x: '-50%' }}
+                        initial={{ y: 350, opacity: 0, scale: 0.8, x: '-50%' }}
                         animate={{
-                            y: -900,
-                            opacity: [0, 1, 1, 0.8, 0],
-                            scale: [0.6, 1.2, 2.2],
-                            rotate: [0, -5, -20]
+                            y: [350, 150, -350, -1100],
+                            opacity: [0, 1, 1, 0.9, 0],
+                            scale: [0.8, 1.2, 2.2, 3.2],
+                            rotate: [0, 0, -12, -22]
                         }}
-                        transition={{ duration: 1.4, ease: [0.4, 0, 0.2, 1] }}
+                        transition={{ duration: 2.8, ease: [0.25, 0.1, 0.25, 1] }}
                         className="fixed bottom-0 left-1/2 z-50 pointer-events-none flex flex-col items-center"
                     >
-                        {/* Jet Thruster Exhaust Glow */}
-                        <div className="relative">
-                            <Boeing777SVG />
-                            <motion.div
-                                animate={{ scale: [1, 1.4, 1], opacity: [0.8, 1, 0.8] }}
-                                transition={{ repeat: Infinity, duration: 0.2 }}
-                                className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-8 h-16 rounded-full bg-gradient-to-b from-sky-400 via-amber-400 to-transparent blur-sm"
-                            />
-                            {/* Twin Engine Contrails */}
-                            <div className="absolute -bottom-20 left-4 w-1.5 h-24 bg-white/40 blur-[2px]" />
-                            <div className="absolute -bottom-20 right-4 w-1.5 h-24 bg-white/40 blur-[2px]" />
-                        </div>
+                        <RealisticBoeing777 />
                     </motion.div>
                 )}
             </AnimatePresence>
