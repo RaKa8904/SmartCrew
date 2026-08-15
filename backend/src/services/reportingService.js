@@ -8,27 +8,87 @@ const generateWorkloadReport = async () => {
     });
 
     const reportData = crew.map(c => {
+        let minTime = Infinity;
+        let maxTime = -Infinity;
+
         const totalHours = c.schedules.reduce((acc, s) => {
-            const duration = (new Date(s.flight.arrivalTime) - new Date(s.flight.departureTime)) / (1000 * 60 * 60);
+            const dep = new Date(s.flight.departureTime).getTime();
+            const arr = new Date(s.flight.arrivalTime).getTime();
+            if (dep < minTime) minTime = dep;
+            if (arr > maxTime) maxTime = arr;
+
+            const duration = (arr - dep) / (1000 * 60 * 60);
             return acc + duration;
         }, 0);
+
+        // Normalize weekly hours over the scheduled window (minimum 1 week span)
+        let weeksSpan = 1;
+        if (c.schedules.length > 0 && maxTime > minTime) {
+            const days = Math.max(7, (maxTime - minTime) / (1000 * 60 * 60 * 24));
+            weeksSpan = Math.max(1, Math.ceil(days / 7));
+        }
+
+        const weeklyAverageHours = totalHours / weeksSpan;
+        const utilPct = Math.min(100, parseFloat(((weeklyAverageHours / c.maxHoursPerWeek) * 100).toFixed(2)));
 
         return {
             crewName: c.user.name,
             crewType: c.crewType,
             totalFlights: c.schedules.length,
             totalHours: totalHours.toFixed(2),
-            utilization: ((totalHours / c.maxHoursPerWeek) * 100).toFixed(2) + '%',
-            utilizationPercent: parseFloat(((totalHours / c.maxHoursPerWeek) * 100).toFixed(2))
+            weeklyAvgHours: weeklyAverageHours.toFixed(2),
+            utilization: utilPct.toFixed(2) + '%',
+            utilizationPercent: utilPct
         };
     });
 
     return reportData;
 };
 
+const generateFlightAssignmentsReport = async () => {
+    const flights = await prisma.flight.findMany({
+        include: {
+            schedules: {
+                include: {
+                    crew: {
+                        include: { user: true }
+                    }
+                }
+            }
+        },
+        orderBy: { departureTime: 'asc' }
+    });
+
+    return flights.map(f => {
+        const pilots = f.schedules
+            .filter(s => s.crew.crewType === 'pilot')
+            .map(s => s.crew.user.name)
+            .join('; ');
+
+        const cabinCrew = f.schedules
+            .filter(s => s.crew.crewType === 'cabin')
+            .map(s => s.crew.user.name)
+            .join('; ');
+
+        return {
+            flightNumber: f.flightNumber,
+            origin: f.origin,
+            destination: f.destination,
+            aircraftType: f.aircraftType,
+            status: f.status,
+            departureTime: new Date(f.departureTime).toISOString(),
+            arrivalTime: new Date(f.arrivalTime).toISOString(),
+            assignedCrewCount: f.schedules.length,
+            assignedPilots: pilots || 'None',
+            assignedCabinCrew: cabinCrew || 'None'
+        };
+    });
+};
+
 const convertToCSV = (data) => {
+    if (!data || data.length === 0) return '';
     const headers = Object.keys(data[0]).join(',');
-    const rows = data.map(row => Object.values(row).join(','));
+    const rows = data.map(row => Object.values(row).map(val => `"${String(val).replace(/"/g, '""')}"`).join(','));
     return [headers, ...rows].join('\n');
 };
 
@@ -115,4 +175,4 @@ const getAdvancedAnalytics = async () => {
     return { historicalDelays, crewFatigue };
 };
 
-module.exports = { generateWorkloadReport, convertToCSV, getAdvancedAnalytics };
+module.exports = { generateWorkloadReport, generateFlightAssignmentsReport, convertToCSV, getAdvancedAnalytics };
