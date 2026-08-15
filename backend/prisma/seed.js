@@ -66,14 +66,33 @@ async function main() {
     const c12 = await prisma.crew.create({ data: { userId: u12.id, crewType: 'cabin', qualification: 'Cabin Crew Junior', maxHoursPerWeek: 50, status: 'active' } });
     const c13 = await prisma.crew.create({ data: { userId: u13.id, crewType: 'cabin', qualification: 'Cabin Crew Junior', maxHoursPerWeek: 50, status: 'on-leave' } });
 
-    // ─── MASSIVE CREW EXPANSION (70 ADDITIONAL CREW) ─────────────────────────
+    // ─── EXPANDED CREW WITH REALISTIC NAMES (42 ADDITIONAL CREW: 20 PILOTS, 22 CABIN) ──────
+    const pilotNames = [
+        'Capt. Alexander Wright', 'F/O Sofia Rodriguez', 'Capt. Liam O\'Connor', 'F/O Fatima Al-Mansoori',
+        'Capt. Kenji Sato', 'F/O Amara Okafor', 'Capt. Lucas Dubois', 'F/O Chloe Bennett',
+        'Capt. Mateo Silva', 'F/O Hanna Kowalski', 'Capt. Tariq Mansour', 'F/O Siddharth Verma',
+        'Capt. Ingrid Lindqvist', 'F/O Isabella Rossi', 'Capt. Dimitri Volkov', 'F/O Chen Wei',
+        'Capt. Grace Kim', 'F/O Noah Van Der Berg', 'Capt. Elena Popov', 'F/O Oliver Hughes'
+    ];
+
+    const cabinNames = [
+        'Viktor Novak', 'Maria Santos', 'Julian Vance', 'Nina Petrov',
+        'Arthur Pendelton', 'Layla Ibrahim', 'Benjamin Hayes', 'Naomi Takahashi',
+        'Gabriel Dupont', 'Zoya Khan', 'Samuel Jackson', 'Freja Larsson',
+        'Oscar Ramirez', 'Camila Morales', 'Leo Fischer', 'Jasmine Taylor',
+        'Henrik Lind', 'Yasmine El-Sayed', 'Lucas Moreau', 'Anya Schneider',
+        'David Miller', 'Chloe Wang'
+    ];
+
     const additionalCrew = [];
-    for (let i = 14; i <= 83; i++) { // 20 pilots, 50 cabin
-        const isPilot = i <= 33;
+
+    // Create 20 pilots
+    for (let i = 0; i < pilotNames.length; i++) {
+        const name = pilotNames[i];
         const user = await prisma.user.create({
             data: {
-                name: isPilot ? `Gen Pilot ${i}` : `Gen Cabin ${i}`,
-                email: isPilot ? `pilot${i}@airline.com` : `cabin${i}@airline.com`,
+                name,
+                email: `pilot_ext${i + 14}@airline.com`,
                 password: hashedPassword,
                 role: 'crew'
             }
@@ -81,16 +100,39 @@ async function main() {
         const crew = await prisma.crew.create({
             data: {
                 userId: user.id,
-                crewType: isPilot ? 'pilot' : 'cabin',
-                qualification: isPilot ? (i % 2 === 0 ? 'A320 Captain' : 'B737 First Officer') : 'Flight Attendant',
-                maxHoursPerWeek: isPilot ? 45 : 50,
+                crewType: 'pilot',
+                qualification: i % 2 === 0 ? 'A320 Captain' : 'B737 First Officer',
+                maxHoursPerWeek: 45,
                 status: 'active'
             }
         });
         additionalCrew.push(crew);
     }
 
-    console.log(`✅ ${13 + additionalCrew.length} Crew profiles created...`);
+    // Create 22 cabin crew
+    for (let i = 0; i < cabinNames.length; i++) {
+        const name = cabinNames[i];
+        const user = await prisma.user.create({
+            data: {
+                name,
+                email: `cabin_ext${i + 34}@airline.com`,
+                password: hashedPassword,
+                role: 'crew'
+            }
+        });
+        const crew = await prisma.crew.create({
+            data: {
+                userId: user.id,
+                crewType: 'cabin',
+                qualification: 'Flight Attendant',
+                maxHoursPerWeek: 50,
+                status: 'active'
+            }
+        });
+        additionalCrew.push(crew);
+    }
+
+    console.log(`✅ ${13 + additionalCrew.length} Crew profiles created (all unique names)...`);
 
     // ─── FLIGHTS ──────────────────────────────────────────────────────────────
     const flights = [

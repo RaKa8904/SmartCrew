@@ -54,19 +54,11 @@ const ReportsPage = () => {
         }
     };
 
-    // 2. Flight Assignments Download & Modal
-    const handleGenerateFlightAssignments = async () => {
-        setModalLoading(true);
-        setActiveModal('assignments');
+    // 2. Flight Assignments Download & Preview Handlers
+    const handleDownloadFlightAssignments = async () => {
         try {
-            const [downloadRes, statsRes] = await Promise.all([
-                api.get('/reports/assignments/download', { responseType: 'blob' }),
-                api.get('/reports/assignments')
-            ]);
-            setAssignmentsData(statsRes.data);
-
-            // Trigger CSV Download
-            const url = window.URL.createObjectURL(new Blob([downloadRes.data]));
+            const response = await api.get('/reports/assignments/download', { responseType: 'blob' });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
             link.setAttribute('download', 'flight_assignments_report.csv');
@@ -74,8 +66,20 @@ const ReportsPage = () => {
             link.click();
             link.remove();
         } catch (err) {
-            console.error('Failed to fetch flight assignments report', err);
-            alert('Flight assignments report generation failed');
+            console.error('Failed to download flight assignments report', err);
+            alert('Flight assignments CSV download failed');
+        }
+    };
+
+    const handlePreviewFlightAssignments = async () => {
+        setModalLoading(true);
+        setActiveModal('assignments');
+        try {
+            const statsRes = await api.get('/reports/assignments');
+            setAssignmentsData(statsRes.data);
+        } catch (err) {
+            console.error('Failed to fetch flight assignments preview', err);
+            alert('Flight assignments preview failed to load');
         } finally {
             setModalLoading(false);
         }
@@ -258,12 +262,21 @@ const ReportsPage = () => {
                         <p className="text-[11px] text-slate-400 leading-relaxed mb-3">
                             Comprehensive list of all flight routes and assigned crew, categorized by aircraft type.
                         </p>
-                        <button
-                            onClick={handleGenerateFlightAssignments}
-                            className="text-blue-400 hover:text-blue-300 text-xs font-bold hover:underline flex items-center gap-1"
-                        >
-                            Generate Report &rarr;
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={handleDownloadFlightAssignments}
+                                className="text-blue-400 hover:text-blue-300 text-xs font-bold hover:underline flex items-center gap-1"
+                            >
+                                Generate CSV &rarr;
+                            </button>
+                            <span className="text-slate-600">|</span>
+                            <button
+                                onClick={handlePreviewFlightAssignments}
+                                className="text-slate-400 hover:text-slate-200 text-xs font-medium hover:underline flex items-center gap-1"
+                            >
+                                <Eye size={12} /> Preview
+                            </button>
+                        </div>
                     </div>
 
                     {/* Utilization Trends */}
@@ -435,11 +448,11 @@ const ReportsPage = () => {
                             )}
                         </div>
 
-                        <div className="p-4 border-t border-white/10 bg-slate-900/50 flex justify-between items-center">
-                            <span className="text-xs text-slate-400 flex items-center gap-1">
-                                <CheckCircle2 size={14} className="text-emerald-400" /> Report downloaded automatically as CSV
-                            </span>
+                        <div className="p-4 border-t border-white/10 bg-slate-900/50 flex justify-end gap-2">
                             <button onClick={() => setActiveModal(null)} className="glass-button !text-xs">Close</button>
+                            <button onClick={handleDownloadFlightAssignments} className="glass-button !py-1.5 !px-3 !text-xs bg-blue-600 hover:bg-blue-500 flex items-center gap-1">
+                                <Download size={14} /> Download CSV
+                            </button>
                         </div>
                     </div>
                 </div>
