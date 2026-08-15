@@ -33,6 +33,8 @@ if (process.env.FRONTEND_URL) {
 }
 
 const app = express();
+app.set('trust proxy', 1);
+
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
@@ -63,7 +65,7 @@ app.use(express.json());
 // Rate Limiters
 const globalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    limit: 100,
+    limit: 1000,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
     message: { message: 'Too many requests from this IP, please try again after 15 minutes' }
@@ -71,7 +73,7 @@ const globalLimiter = rateLimit({
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    limit: 15,
+    limit: 300,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
     message: { message: 'Too many authentication attempts, please try again after 15 minutes' }
