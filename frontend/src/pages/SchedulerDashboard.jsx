@@ -167,7 +167,14 @@ const SchedulerDashboard = () => {
         setLoading(false);
     };
 
-    useEffect(() => { fetchData(); }, []);
+    useEffect(() => { 
+        fetchData(); 
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') setSelectedFlightForAI(null);
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     const handleOpenAIRecommendations = async (flight) => {
         setSelectedFlightForAI(flight);
@@ -189,9 +196,10 @@ const SchedulerDashboard = () => {
         try {
             await api.post('/schedules/assign', { flightId: selectedFlightForAI.id, crewId });
             await fetchData();
-            // Re-fetch recommendations to update UI state
-            const res = await api.get(`/reports/fatigue/recommendations?flightId=${selectedFlightForAI.id}`);
-            setRecommendations(res.data.recommendations || []);
+            // Automatically close drawer after successful assignment
+            setTimeout(() => {
+                setSelectedFlightForAI(null);
+            }, 600);
         } catch (err) {
             alert(err.response?.data?.message || 'Failed to assign crew member');
         } finally {
@@ -376,8 +384,14 @@ const SchedulerDashboard = () => {
 
             {/* AI Recommendation Drawer / Modal */}
             {selectedFlightForAI && (
-                <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-fade-in">
-                    <div className="w-full max-w-xl bg-slate-900 border-l border-slate-800 h-full flex flex-col shadow-2xl overflow-hidden">
+                <div 
+                    className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-fade-in cursor-pointer"
+                    onClick={() => setSelectedFlightForAI(null)}
+                >
+                    <div 
+                        className="w-full max-w-xl bg-slate-900 border-l border-slate-800 h-full flex flex-col shadow-2xl overflow-hidden cursor-default"
+                        onClick={e => e.stopPropagation()}
+                    >
                         {/* Drawer Header */}
                         <div className="p-6 border-b border-slate-800 bg-slate-950/60 flex items-center justify-between">
                             <div>
@@ -391,7 +405,8 @@ const SchedulerDashboard = () => {
                             </div>
                             <button
                                 onClick={() => setSelectedFlightForAI(null)}
-                                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                                title="Close Drawer (Esc)"
                             >
                                 <X size={20} />
                             </button>
@@ -414,23 +429,36 @@ const SchedulerDashboard = () => {
                                     <p>No suitable crew recommendations found for this flight.</p>
                                 </div>
                             ) : (
-                                recommendations.map((cand) => {
+                                recommendations.map((cand, index) => {
                                     const isAssigned = (selectedFlightForAI.schedules || []).some(s => s.crewId === cand.crewId);
+                                    const isTopChoice = index === 0 && cand.matchScore >= 80;
 
                                     return (
                                         <div
                                             key={cand.crewId}
                                             className={`p-4 rounded-2xl border transition-all ${isAssigned
                                                 ? 'bg-emerald-950/20 border-emerald-500/40'
-                                                : 'bg-slate-950/50 border-slate-800 hover:border-slate-700'}`}
+                                                : isTopChoice
+                                                    ? 'bg-emerald-950/10 border-emerald-500/50 shadow-lg shadow-emerald-950/20'
+                                                    : 'bg-slate-950/50 border-slate-800 hover:border-slate-700'}`}
                                         >
                                             <div className="flex justify-between items-start mb-2">
                                                 <div>
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex flex-wrap items-center gap-2">
                                                         <h3 className="font-bold text-white text-base">{cand.name}</h3>
                                                         <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-semibold uppercase">
                                                             {cand.crewType}
                                                         </span>
+                                                        {isTopChoice && (
+                                                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold tracking-wide">
+                                                                ⭐ #1 AI CHOICE
+                                                            </span>
+                                                        )}
+                                                        {!cand.isQualified && (
+                                                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 font-bold">
+                                                                QUALIFICATION MISMATCH
+                                                            </span>
+                                                        )}
                                                     </div>
                                                     <p className="text-xs text-slate-400 mt-0.5">{cand.qualification}</p>
                                                 </div>

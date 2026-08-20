@@ -5,7 +5,7 @@ import { useRules } from '../context/RulesContext';
 import { useTheme } from '../context/ThemeContext';
 import {
     Plane, Users, CheckCircle, AlertTriangle, TrendingUp,
-    Settings, Download, ExternalLink, Activity, Clock, Radio
+    Settings, Download, ExternalLink, Activity, Clock, Radio, Zap
 } from 'lucide-react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -18,19 +18,30 @@ const STATUS_COLORS = { 'on-time': '#10b981', delayed: '#f59e0b', cancelled: '#e
 const PIE_COLORS = ['#10b981', '#f59e0b', '#ef4444'];
 
 const AnimatedNumber = ({ value }) => {
-    const [display, setDisplay] = useState(0);
+    const isNumeric = typeof value === 'number' && !isNaN(value);
+    const [display, setDisplay] = useState(isNumeric ? 0 : (value ?? '0'));
+
     useEffect(() => {
+        if (!isNumeric) {
+            setDisplay(value ?? '0');
+            return;
+        }
         const duration = 600;
-        const steps = 30;
+        const steps = 20;
         const step = value / steps;
         let current = 0;
         const t = setInterval(() => {
             current += step;
-            if (current >= value) { setDisplay(value); clearInterval(t); }
-            else setDisplay(Math.floor(current));
+            if (current >= value) {
+                setDisplay(value);
+                clearInterval(t);
+            } else {
+                setDisplay(Math.floor(current));
+            }
         }, duration / steps);
         return () => clearInterval(t);
-    }, [value]);
+    }, [value, isNumeric]);
+
     return <span>{display}</span>;
 };
 
@@ -77,10 +88,15 @@ const AdminDashboard = () => {
                 ]);
                 const allFlights = flightsRes.data;
                 setFlights(allFlights);
+                let totalAssignments = 0;
+                allFlights.forEach(f => {
+                    totalAssignments += (f.schedules || []).length;
+                });
+
                 setStats({
                     totalFlights: allFlights.length,
                     totalCrew: crewRes.data.length,
-                    scheduledFlights: allFlights.filter(f => f.schedules?.length > 0).length,
+                    totalAssignments,
                     conflicts: conflictsRes.data.length,
                 });
                 setUtilizationData(utilRes.data.slice(0, 6));
@@ -149,9 +165,9 @@ const AdminDashboard = () => {
 
     const statCards = [
         { label: 'Total Flights', value: stats.totalFlights, icon: <Plane size={20} />, accent: '#0ea5e9', bg: 'rgba(14,165,233,0.1)', border: 'rgba(14,165,233,0.2)' },
-        { label: 'Crew Members', value: stats.totalCrew, icon: <Users size={20} />, accent: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.2)' },
-        { label: 'Crew Assigned', value: stats.scheduledFlights, icon: <CheckCircle size={20} />, accent: '#10b981', bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.2)' },
-        { label: 'Conflicts', value: stats.conflicts, icon: <AlertTriangle size={20} />, accent: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.2)' },
+        { label: 'Active Crew Members', value: stats.totalCrew, icon: <Users size={20} />, accent: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.2)' },
+        { label: 'Duty Assignments', value: stats.totalAssignments, icon: <CheckCircle size={20} />, accent: '#10b981', bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.2)' },
+        { label: 'Active Conflicts', value: stats.conflicts, icon: <AlertTriangle size={20} />, accent: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.2)' },
     ];
 
     const ruleCards = [
@@ -442,7 +458,11 @@ const AdminDashboard = () => {
                             </div>
                             <div className="flex justify-between text-slate-300">
                                 <span>Training Data Source:</span>
-                                <span className="font-semibold text-emerald-400">Active Postgres DB + Live Flight History</span>
+                                <span className="font-semibold text-emerald-400">Active Postgres DB + Live History</span>
+                            </div>
+                            <div className="flex justify-between text-slate-300 pt-1 border-t border-emerald-500/20">
+                                <span>Automated Retrain Schedule:</span>
+                                <span className="font-bold text-sky-400">🤖 24h Daily Hands-Free</span>
                             </div>
                         </div>
 

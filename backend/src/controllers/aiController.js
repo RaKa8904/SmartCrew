@@ -9,6 +9,41 @@ const GENERATE_SCRIPT = path.join(__dirname, '../../scripts/generate-fatigue-dat
 const TRAIN_SCRIPT = path.join(__dirname, '../../scripts/train-fatigue-model.py');
 
 let isRetraining = false;
+let lastAutoRetrainedAt = new Date().toISOString();
+let nextAutoRetrainAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+const triggerAutoRetrainInternal = () => {
+    if (isRetraining) return;
+    isRetraining = true;
+    console.log('[AUTO-RETRAIN] 24-Hour Automated ML Retraining triggered on live DB records...');
+
+    execFile('node', [GENERATE_SCRIPT], (genErr) => {
+        if (genErr) {
+            console.error('[AUTO-RETRAIN] Dataset generation failed:', genErr);
+            isRetraining = false;
+            return;
+        }
+
+        execFile('python', [TRAIN_SCRIPT], (trainErr, trainStdout) => {
+            isRetraining = false;
+            lastAutoRetrainedAt = new Date().toISOString();
+            nextAutoRetrainAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+            if (trainErr) {
+                console.error('[AUTO-RETRAIN] Python model training failed:', trainErr);
+            } else {
+                console.log('[AUTO-RETRAIN] 24-Hour Automated ML Model Retrain complete:', trainStdout ? trainStdout.trim() : 'OK');
+            }
+        });
+    });
+};
+
+const startAutoRetrainScheduler = () => {
+    const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+    setInterval(() => {
+        triggerAutoRetrainInternal();
+    }, TWENTY_FOUR_HOURS);
+    console.log('🤖 24-Hour Automated ML Retraining Service initialized (Daily schedule).');
+};
 
 const getModelStatus = async (req, res) => {
     try {
@@ -26,6 +61,9 @@ const getModelStatus = async (req, res) => {
             isRetraining,
             manifest,
             metrics,
+            autoSchedule: '24 Hours (Daily Live Sync)',
+            lastAutoRetrainedAt,
+            nextAutoRetrainAt,
             status: 'online'
         });
     } catch (error) {
@@ -38,33 +76,16 @@ const retrainModel = async (req, res) => {
         return res.status(400).json({ message: 'Model retraining is already in progress' });
     }
 
-    isRetraining = true;
-
-    // Run dataset generation first, then python retraining script asynchronously
-    execFile('node', [GENERATE_SCRIPT], (genErr, genStdout, genStderr) => {
-        if (genErr) {
-            console.error('Dataset generation failed during retrain:', genErr);
-            isRetraining = false;
-            return;
-        }
-
-        execFile('python', [TRAIN_SCRIPT], (trainErr, trainStdout, trainStderr) => {
-            isRetraining = false;
-            if (trainErr) {
-                console.error('Python retraining failed:', trainErr);
-            } else {
-                console.log('Model retraining completed successfully:', trainStdout);
-            }
-        });
-    });
+    triggerAutoRetrainInternal();
 
     return res.json({
-        message: 'Model retraining triggered successfully on active database records.',
+        message: 'Manual ML Model Retraining triggered on active database records.',
         isRetraining: true
     });
 };
 
 module.exports = {
     getModelStatus,
-    retrainModel
+    retrainModel,
+    startAutoRetrainScheduler
 };

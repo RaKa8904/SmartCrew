@@ -19,6 +19,7 @@ const portalRoutes = require('./routes/crewPortalRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const { seedDefaultRules } = require('./controllers/ruleController');
 const { startFleetTracker } = require('./services/fleetTrackerService');
+const { startAutoRetrainScheduler } = require('./controllers/aiController');
 
 const allowedOrigins = [
     'http://localhost:5173',
@@ -121,4 +122,6 @@ server.listen(PORT, '0.0.0.0', async () => {
     await seedDefaultRules();
     // Start the background tracking service
     startFleetTracker(io);
+    // Start the 24-hour automated ML retraining schedule
+    startAutoRetrainScheduler();
 });
