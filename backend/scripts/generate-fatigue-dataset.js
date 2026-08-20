@@ -98,7 +98,66 @@ async function main() {
     await prisma.fatigueTrainingSample.deleteMany();
 
     const datasetRows = [];
-    const crewCount = 200;
+
+    // 1. Ingest Active Database Flights & Schedules
+    try {
+        const activeCrew = await prisma.crew.findMany({
+            include: {
+                schedules: {
+                    include: { flight: true }
+                }
+            }
+        });
+
+        const activeFlights = await prisma.flight.findMany();
+
+        for (const crewMember of activeCrew) {
+            const crewSchedules = crewMember.schedules.sort((a, b) => new Date(a.flight.departureTime) - new Date(b.flight.departureTime));
+
+            for (let i = 0; i < crewSchedules.length; i++) {
+                const currentSchedule = crewSchedules[i];
+                const previousSchedules = crewSchedules.slice(0, i);
+
+                const crewShape = {
+                    id: crewMember.id,
+                    crewType: crewMember.crewType,
+                    qualification: crewMember.qualification,
+                    maxHoursPerWeek: crewMember.maxHoursPerWeek,
+                    status: crewMember.status,
+                    schedules: previousSchedules
+                };
+
+                const features = buildFatigueFeatures(crewShape, currentSchedule.flight);
+                const scored = scoreFatigueFeatures(features);
+
+                datasetRows.push({
+                    sampleKey: `active_db-${crewMember.id}-${formatDateKey(currentSchedule.flight.departureTime)}-${currentSchedule.flight.flightNumber}`,
+                    crewName: crewMember.name || `Crew #${crewMember.id}`,
+                    crewType: crewMember.crewType,
+                    qualification: crewMember.qualification,
+                    dutyDate: currentSchedule.flight.departureTime,
+                    departureTime: currentSchedule.flight.departureTime,
+                    arrivalTime: currentSchedule.flight.arrivalTime,
+                    origin: currentSchedule.flight.origin,
+                    destination: currentSchedule.flight.destination,
+                    flightNumber: currentSchedule.flight.flightNumber,
+                    aircraftType: currentSchedule.flight.aircraftType || 'Boeing 737',
+                    featureVector: features,
+                    labelScore: scored.riskScore,
+                    labelClass: labelFromScore(scored.riskScore),
+                    noiseApplied: 0.0,
+                    dataSource: 'active_db',
+                    modelVersion: MODEL_VERSION,
+                });
+            }
+        }
+        console.log(`Ingested ${datasetRows.length} active database fatigue samples.`);
+    } catch (err) {
+        console.warn('Could not ingest active DB records, falling back to synthetic:', err.message);
+    }
+
+    // 2. Synthetic History Generation
+    const crewCount = 150;
 
     for (let crewIndex = 0; crewIndex < crewCount; crewIndex += 1) {
         const crewHistory = buildCrewHistory(crewIndex);
@@ -149,7 +208,7 @@ async function main() {
         await prisma.fatigueTrainingSample.createMany({ data: batch });
     }
 
-    console.log(`Generated ${datasetRows.length} synthetic fatigue training samples for ${crewCount} crew profiles.`);
+    console.log(`Generated total of ${datasetRows.length} fatigue training samples for model training.`);
 }
 
 main()

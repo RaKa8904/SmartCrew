@@ -68,35 +68,27 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         <div className={`h-screen w-64 flex flex-col fixed left-0 top-0 z-50 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
             style={{ background: 'var(--sidebar-bg)', borderRight: '1px solid var(--sidebar-border)', backdropFilter: 'blur(20px)' }}>
 
-            {/* ChatGPT-style Sidebar Collapse Button & Hover Handle */}
+            {/* Sidebar Collapse/Expand Toggle Button */}
             <div 
-                className="absolute right-0 top-0 h-full w-3 group cursor-pointer z-50"
+                className="absolute right-0 top-0 h-full w-4 group cursor-pointer z-50"
                 style={{ transform: 'translateX(50%)' }}
                 onClick={(e) => {
                     e.stopPropagation();
                     toggleSidebar();
                 }}
             >
-                {/* Hover handle line */}
-                <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[4px] bg-primary-500/0 group-hover:bg-primary-500/30 dark:group-hover:bg-primary-400/20 transition-all duration-300 rounded-full my-6" />
-                
-                {/* Toggle pill button */}
                 <button
+                    type="button"
                     onClick={(e) => {
                         e.stopPropagation();
                         toggleSidebar();
                     }}
-                    className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-10 rounded-md border flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105 ${isOpen ? 'opacity-0 group-hover:opacity-100' : 'opacity-70 group-hover:opacity-100'}`}
-                    style={{
-                        background: 'var(--sidebar-bg)',
-                        borderColor: 'var(--sidebar-border)',
-                        color: 'var(--text-base)',
-                        cursor: 'pointer'
-                    }}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-12 rounded-r-xl border border-l-0 bg-slate-900 border-sky-500/40 text-sky-400 shadow-2xl flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 hover:bg-slate-800 hover:border-sky-400"
+                    title={isOpen ? "Collapse Sidebar" : "Expand Sidebar"}
                 >
                     <ChevronRight 
-                        size={14} 
-                        className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} 
+                        size={20} 
+                        className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : 'rotate-0 text-emerald-400'}`} 
                     />
                 </button>
             </div>

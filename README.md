@@ -1,272 +1,222 @@
-<div align="center">
+# SmartCrew
 
-# ✈️ SmartCrew
+### Aviation Operations and Automated Crew Scheduling Platform
 
-### Aviation Operations Center — AI-Powered Crew Scheduling
-
-<br/>
-
-<p>
-  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white" />
-  <img src="https://img.shields.io/badge/Node.js-22-339933?style=for-the-badge&logo=node.js&logoColor=white" />
-  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" />
-  <img src="https://img.shields.io/badge/Prisma-5.22-2D3748?style=for-the-badge&logo=prisma&logoColor=white" />
-  <img src="https://img.shields.io/badge/Vite-7-646CFF?style=for-the-badge&logo=vite&logoColor=white" />
-  <img src="https://img.shields.io/badge/TailwindCSS-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" />
-</p>
-
-<p>
-  <img src="https://img.shields.io/badge/License-MIT-f59e0b?style=flat-square" />
-  <img src="https://img.shields.io/badge/Status-Active-10b981?style=flat-square" />
-  <img src="https://img.shields.io/badge/Project-Final%20Year%20T.E.%20AI%20%26%20DS-a78bfa?style=flat-square" />
-</p>
-
-> **An advanced, AI-powered full-stack aviation crew scheduling system** — automating crew assignment, conflict detection, duty compliance, and flight operations management for airlines. Built as a **T.E. AI & DS** Project.
-
-</div>
+SmartCrew is an enterprise-grade crew scheduling and flight operations management platform. It automates crew assignment, enforces flight duty compliance rules, evaluates pilot and cabin crew fatigue using machine learning, and synchronizes live dispatch operations across flight control centers.
 
 ---
 
-## 📸 Preview
+## Operations Overview
 
-|     Interactive Scheduler      |            Admin Analytics            |         Live Flight Board          |
-| :----------------------------: | :-----------------------------------: | :--------------------------------: |
-| Drag-and-drop assignment board | Scatter plots, delays, and CSV export | FIDS airport-style departure board |
+SmartCrew streamlines airline flight operations through three core portals:
 
-|     Flight Management     |              Crew Portal              |          Notifications           |
-| :-----------------------: | :-----------------------------------: | :------------------------------: |
-| Boarding-pass style cards | Shift Bids, Swaps, and Leave Requests | Real-time WebSocket + SMTP Email |
-
----
-
-## ✨ Features
-
-### 🛡️ Role-Based Access Control
-
-Three distinct portals with protected routes and JWT authentication:
-
-| Role          | Access                                                                   |
-| ------------- | ------------------------------------------------------------------------ |
-| **Admin**     | Full control — crew, flights, rules, reports, analytics, system insights |
-| **Scheduler** | Auto-generate schedules, drag-and-drop assignments, resolve conflicts    |
-| **Crew**      | Personal schedule, shift bidding, peer swaps, availability management    |
-
-### 🤖 AI Scheduling Engine & System Rules
-
-Multi-factor crew scoring algorithm enforcing dynamic system rules:
-
-- Respects **Min Rest Period** between flights
-- Enforces **Max Weekly Duty Hours** cap per crew member
-- Checks **Crew Availability** and **Leave Requests**
-- Matches **Qualification Type** to flight constraints
-- Detects and prevents **Overlap Conflicts** automatically.
-
-### 🧠 Fatigue Risk Baseline
-
-The project now has a first-pass fatigue risk target that predicts risk before assignment:
-
-- Exposes a **0–100 fatigue risk score** plus **Low / Medium / High** class
-- Uses rolling **24-hour / 7-day / 28-day duty windows** from current schedule history
-- Factors in **hours since last rest**, **consecutive duty days**, **timezone crossings**, and **night/early-morning departures**
-- Lives beside the rule engine as a baseline heuristic for the later synthetic-data and ML phases
-
-### 🧩 Interactive Drag-and-Drop Scheduler
-
-A specialized visual workspace for Schedulers:
-
-- Filter available crew memebers by date.
-- Drag-and-drop crew from the Available Pool directly onto upcoming Flight Cards.
-- Triggers instant recalculation and assignment validation.
-
-### 🌍 Real-World Flight Data Integration (Hybrid Engine)
-
-The system is capable of ingesting live tracking data rather than relying completely on simulations:
-
-- **Live FIDS Sync:** Instant integration with the **Aviationstack API** to ingest real-world, live domestic flights (e.g., DEL to BOM).
-- **Fallback Simulation:** Automatically generates realistic high-volume routing models if an API key is absent.
-- **Auto-Staffing Pipeline:** Wipes old dummy flights, pulls 60+ new tracking flights, and instantly fires the AI Scoring Engine to evaluate 80+ mock crew members and auto-staff every single real flight according to compliance rules.
-
-### 📈 Advanced Analytics & Admin Dashboard
-
-Actionable operational intelligence:
-
-- **Fleet Delays (7-Day Forecast):** Rolling line chart tracking dispatch reliability.
-- **Crew Fatigue Hotspots:** Scatter plot cross-referencing Scheduled Duty Hours vs Alert/Notification count to prevent burnout.
-- **Crew Utilization:** Workload percentage ranking charts.
-- **Data Export:** Instant raw CSV workload exports.
-
-### 🛫 Live Flight Board (FIDS) & Real-Time Comms
-
-Real-time operations synchronized across all active clients:
-
-- **WebSockets:** Live updates to FIDS boards and Crew Portals via `Socket.io`.
-- **SMTP Email Notifications:** Securely sends alert emails for manual scheduling changes directly to Crew member inboxes.
-- Flip-text animation on status changes.
-
-### 👥 Comprehensive Crew Self-Service Portal
-
-Empowers crew members with direct schedule control:
-
-- **Shift Swabbing:** Request shift trades with qualified peers. Includes multi-stage approval workflow.
-- **Flight Bidding:** Place bids on unassigned priority flights.
-- **Leave Management:** Submit and track leave request statuses.
+| Portal | User Role | Functionality |
+| :--- | :--- | :--- |
+| **Admin Operations** | System Administrators | User management, global compliance rule configuration, fleet analytics, fatigue reporting |
+| **Dispatch & Scheduling** | Flight Schedulers | Interactive roster workspace, automated crew scoring, drag-and-drop dispatch, overlap resolution |
+| **Crew Self-Service** | Pilots & Cabin Crew | Personal roster view, shift bidding, peer shift swaps, leave requests |
 
 ---
 
-## 🚀 Tech Stack
+## Core Capabilities
 
-| Layer              | Technology                                        |
-| ------------------ | ------------------------------------------------- |
-| **Frontend**       | React 19 + Vite 7 + Tailwind CSS v4               |
-| **UI Interactive** | @dnd-kit/core (Drag & Drop), Recharts (Analytics) |
-| **Fonts/Icons**    | Inter, Space Mono, Lucide React, Framer Motion    |
-| **Backend**        | Node.js 22 + Express 5                            |
-| **Real-Time**      | Socket.io (WebSockets), Nodemailer (SMTP)         |
-| **Database**       | PostgreSQL 16 + Prisma ORM 5                      |
-| **Auth**           | JWT (jsonwebtoken) + bcryptjs                     |
+### Machine Learning Fatigue Risk Engine
+Integrated predictive fatigue risk management engine evaluating crew burnout parameters before duty assignment:
+- **Biomathematical Risk Scoring**: Computes a continuous fatigue score (0–100) and risk classification (Low, Medium, High).
+- **Multi-Window Duty Tracking**: Evaluates rolling duty metrics over 24-hour, 7-day, and 28-day historical windows.
+- **Circadian & Shift Disruption**: Incorporates rest intervals since last duty, consecutive duty days, time-zone shifts, and early morning or night departures.
+- **Random Forest Inference Model**: Uses a scikit-learn Random Forest classifier (`fatigue_model_v1.pkl`) invoked via a Python subprocess IPC pipeline in `fatigueRiskService.js`, with an automated heuristic baseline fallback.
+- **Preview API Integration**: Exposes real-time pre-assignment risk predictions (`GET /api/reports/fatigue/preview`).
+
+### Dynamic Rules & Automated Constraint Engine
+Scoring algorithm evaluating crew eligibility against regulatory limits:
+- Mandatory minimum rest period verification between duties.
+- Rolling weekly and monthly duty hour limits.
+- Qualification matching (aircraft type, rank, certification).
+- Automatic overlap detection and conflict prevention.
+
+### Interactive Drag-and-Drop Scheduler
+Specialized visual workspace for flight operations schedulers:
+- Dynamic crew filtering by availability, qualification, and date window.
+- Visual assignment onto flight rosters using `@dnd-kit`.
+- Instant server-side constraint re-validation upon assignment.
+
+### Hybrid Flight Data Integration
+Flexible flight ingestion pipeline:
+- **Live Aviationstack API Sync**: Synchronizes actual flight numbers, routes, and departure times.
+- **Fallback Simulation Engine**: Generates high-density flight schedules when external API connectivity is inactive.
+- **Automated Roster Pipeline**: Staffs incoming flights according to compliance rules and crew availability.
+
+### Real-Time Communications & FIDS
+Operations synchronization across active web sessions:
+- **Flight Information Display System (FIDS)**: Live departure/arrival board updated via `Socket.io` WebSockets.
+- **Automated Dispatch Alerts**: Email notifications sent via Nodemailer SMTP upon roster updates or shift assignments.
+
+### Crew Self-Service & Rostering
+Direct schedule management for crew members:
+- **Peer Shift Swaps**: Peer-to-peer shift exchange with multi-tier approval control.
+- **Flight Bidding**: Crew preference bidding on unassigned flight legs.
+- **Leave Request Management**: Submission and tracking of time-off requests.
+
+### Operational Analytics
+Actionable intelligence for flight operations management:
+- **Fleet Reliability Metrics**: 7-day delay trends and dispatch performance indicators.
+- **Fatigue Distribution Analysis**: Duty hours vs. operational alert correlation scatter plots.
+- **Workload Export**: Raw CSV export capability for crew utilization reports.
 
 ---
 
-## 📁 Project Structure
+## Tech Stack
+
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend UI** | React 19, Vite 7, Tailwind CSS v4 |
+| **Visual Components** | `@dnd-kit/core`, Recharts, Framer Motion, Lucide Icons |
+| **Backend API** | Node.js 22, Express 5 |
+| **Real-Time Layer** | Socket.io (WebSockets), Nodemailer (SMTP) |
+| **Data & ORM** | PostgreSQL 16, Prisma ORM 5 |
+| **Machine Learning** | Python 3, scikit-learn (Random Forest), NumPy, Pandas |
+| **Authentication** | JSON Web Tokens (JWT), bcryptjs |
+
+---
+
+## Project Structure
 
 ```
 SmartCrew/
 ├── backend/
+│   ├── artifacts/
+│   │   └── fatigue/
+│   │       └── fatigue_model_v1.pkl     # Trained Random Forest model artifact
 │   ├── prisma/
-│   │   ├── schema.prisma          # DB schemas (User, Crew, Flight, Schedule, Rule, Bids...)
-│   │   └── seed.js                # Fully boots dummy data for 25+ flights & 15+ crew
+│   │   ├── schema.prisma                # Database schemas (Users, Crew, Flights, Schedules, Rules)
+│   │   └── seed.js                      # Database seeder script
+│   ├── scripts/
+│   │   ├── generate-fatigue-dataset.js  # Synthetic training data generator
+│   │   ├── train-fatigue-model.py       # ML training pipeline script
+│   │   └── predict-fatigue.py           # Subprocess model inference bridge
 │   └── src/
 │       ├── algorithms/
-│       │   └── scheduling.js      # Core scoring algorithm
-│       ├── controllers/           # Business logic endpoints
-│       ├── middleware/            # Auth and Roles
-│       ├── routes/                # Express routing multiplexer
+│       │   └── scheduling.js            # Core crew eligibility scoring algorithm
+│       ├── controllers/                 # Express API controllers
+│       ├── middleware/                  # JWT authentication and RBAC middleware
+│       ├── routes/                      # API route definitions
 │       ├── services/
-│       │   ├── emailService.js        # Nodemailer SMTP logic
-│       │   ├── fatigueRiskService.js   # Heuristic fatigue preview baseline
-│       │   ├── socketService.js       # Live event broadcaster
-│       │   ├── reportingService.js    # Prisma Aggregation (Fatigue/Delays)
-│       │   ├── schedulingService.js   # Constraints validation
-│       │   └── flightSyncService.js   # Live Aviationstack Tracking Sync
-│       └── index.js               # Node.js Server Boot
+│       │   ├── emailService.js          # SMTP notification service
+│       │   ├── fatigueRiskService.js     # ML model integration and heuristic fallback
+│       │   ├── flightSyncService.js     # Aviationstack API integration
+│       │   ├── reportingService.js      # Analytics aggregations
+│       │   ├── schedulingService.js     # Duty constraint checking
+│       │   └── socketService.js         # WebSocket broadcast management
+│       └── index.js                     # Application entry point
 │
 └── frontend/
     └── src/
-        ├── components/
-        │   └── Layout.jsx          # Radar HUD Wrapper
-        ├── context/
-        │   ├── AuthContext.jsx     # JWT Sync State
-        │   └── RulesContext.jsx    # Live Dynamic Rules State
+        ├── components/                  # Layout and reusable UI components
+        ├── context/                     # Auth and global application state
         ├── pages/
-        │   ├── AdminDashboard.jsx  # Analytics & System Rules
-        │   ├── SchedulerDashboard.jsx  # Drag-and-Drop Assignment
-        │   ├── CrewDashboard.jsx   # Duty tracking & Shift Bidding
-        │   ├── LiveFlightBoard.jsx # FIDS board
-        │   └── ...                 # Swaps, Users, Conflicts
-        └── index.css               # Futuristic aviation theme definitions
+        │   ├── AdminDashboard.jsx       # Analytics and system rules management
+        │   ├── SchedulerDashboard.jsx   # Interactive drag-and-drop workspace
+        │   ├── CrewDashboard.jsx        # Crew schedule, swaps, and bidding
+        │   └── LiveFlightBoard.jsx      # Real-time FIDS display
+        └── index.css                    # Global application styles
 ```
 
 ---
 
-## ⚙️ Setup & Installation
+## Setup and Installation
 
 ### Prerequisites
 
-- **Node.js** v18+
-- **PostgreSQL** v14+
+- **Node.js** v18.0.0 or higher
+- **PostgreSQL** v14.0 or higher
+- **Python** 3.9 or higher (for ML fatigue model inference)
 
-### 1. Clone the repo
+### 1. Repository Setup
 
 ```bash
 git clone https://github.com/RaKa8904/SmartCrew.git
 cd SmartCrew
 ```
 
-### 2. Configure the Backend
+### 2. Backend Configuration
 
 ```bash
 cd backend
 npm install
 ```
 
-Create a `.env` file in the `backend/` directory:
+Create a `.env` file inside the `backend/` directory:
 
 ```env
 DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/crew_scheduling?schema=public"
-JWT_SECRET="your_secure_jwt_secret_here"
+JWT_SECRET="your_secure_jwt_secret_key"
 PORT=5000
 
-# Optional: For Email Notifications
+# Optional: Email Notification Settings
 SMTP_HOST=smtp.gmail.com
 SMTP_USER=your_email@gmail.com
 SMTP_PASS=your_app_password
 
-# Optional: For Live Real-World Flight Data Sync
+# Optional: Live Flight Sync Settings
 AVIATIONSTACK_API_KEY=your_api_key_here
 ```
 
-### 3. Run Database Migrations & Seed
+### 3. Database Migration and Seeding
 
 ```bash
-# Apply all generic migrations
+# Run database migrations
 npx prisma migrate dev
 
-# Seed with rich mock flight data, schedules, and test accounts
+# Seed initial flight, crew, and operational data
 npx prisma db seed
 ```
 
-### 4. Start the Application
+### 4. Machine Learning Model Training (Optional)
 
-**Backend:**
+The pre-trained model artifact is included in `backend/artifacts/fatigue/fatigue_model_v1.pkl`. To re-generate synthetic datasets and re-train the model:
+
+```bash
+# Generate synthetic training dataset
+node scripts/generate-fatigue-dataset.js
+
+# Train the Random Forest model
+python scripts/train-fatigue-model.py
+```
+
+### 5. Running the Application
+
+**Backend Server:**
 
 ```bash
 npm run dev
-# Server starts on http://localhost:5000
+# Server accessible at http://localhost:5000
 ```
 
-**Frontend:**
+**Frontend Client:**
 
 ```bash
 cd ../frontend
 npm install
 npm run dev
-# App available at http://localhost:5173
+# Interface accessible at http://localhost:5173
 ```
 
 ---
 
-## 👤 Demo Accounts
+## Demo Accounts
 
-> The login page includes a **Quick Access panel** — just click a role card to auto-fill credentials.
+The login interface provides quick-access credentials for operational testing:
 
-| Role              | Email                   | Password      |
-| ----------------- | ----------------------- | ------------- |
-| 🟡 **Admin**      | `admin@airline.com`     | `password123` |
-| 🔵 **Scheduler**  | `scheduler@airline.com` | `password123` |
-| 🟣 **Pilot**      | `pilot1@airline.com`    | `password123` |
-| 🟢 **Cabin Crew** | `cabin1@airline.com`    | `password123` |
-
----
-
-## 📄 License
-
-This project is licensed under the **MIT License** — see [LICENSE](./LICENSE) for details.
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| **System Admin** | `admin@airline.com` | `password123` |
+| **Flight Scheduler** | `scheduler@airline.com` | `password123` |
+| **Pilot** | `pilot1@airline.com` | `password123` |
+| **Cabin Crew** | `cabin1@airline.com` | `password123` |
 
 ---
 
-<div align="center">
+## License
 
-**Built with ❤️ for T.E. AI & DS**
-
-<sub>SmartCrew · Aviation Operations Center · 2025–2026</sub>
-
-</div>
-
----
-
-## Fatigue Upgrade Roadmap
-
-1. **Phase 1**: Heuristic fatigue preview endpoint: `GET /api/reports/fatigue/preview?flightId=...` (Completed)
-2. **Phase 2**: Added synthetic training data generator `generate-fatigue-dataset.js` and database tables. (Completed)
-3. **Phase 3**: Built the Random Forest training script `train-fatigue-model.py` and saved the model artifact at `backend/artifacts/fatigue/fatigue_model_v1.pkl`. (Completed)
-4. **Phase 4**: Integrated scikit-learn model predictions using a fast batched Python subprocess interface in `fatigueRiskService.js` with heuristic-v1 fallback. (Completed)
+Distributed under the MIT License. See [LICENSE](./LICENSE) for full licensing information.

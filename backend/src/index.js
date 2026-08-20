@@ -16,6 +16,7 @@ const ruleRoutes = require('./routes/ruleRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const portalRoutes = require('./routes/crewPortalRoutes');
+const aiRoutes = require('./routes/aiRoutes');
 const { seedDefaultRules } = require('./controllers/ruleController');
 const { startFleetTracker } = require('./services/fleetTrackerService');
 
@@ -108,6 +109,7 @@ app.use('/api/rules', ruleRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/portal', portalRoutes);
+app.use('/api/ai', aiRoutes);
 
 app.get('/', (req, res) => {
     res.send('Crew Scheduling API is running');

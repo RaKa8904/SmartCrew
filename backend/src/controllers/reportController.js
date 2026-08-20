@@ -1,5 +1,5 @@
 const { generateWorkloadReport, generateFlightAssignmentsReport, convertToCSV, getAdvancedAnalytics: fetchAdvancedAnalytics } = require('../services/reportingService');
-const { getFatiguePreview: fetchFatiguePreview } = require('../services/fatigueRiskService');
+const { getFatiguePreview: fetchFatiguePreview, getSmartRecommendations: fetchRecommendations } = require('../services/fatigueRiskService');
 
 const downloadWorkloadReport = async (req, res) => {
     try {
@@ -63,11 +63,26 @@ const getFatiguePreview = async (req, res) => {
     }
 };
 
+const getSmartRecommendations = async (req, res) => {
+    try {
+        const { flightId } = req.query;
+        if (!flightId) {
+            return res.status(400).json({ message: 'flightId query parameter is required' });
+        }
+        const data = await fetchRecommendations(flightId);
+        res.json({ recommendations: data });
+    } catch (error) {
+        const statusCode = error.statusCode || 500;
+        res.status(statusCode).json({ message: 'Server error', error: error.message });
+    }
+};
+
 module.exports = {
     downloadWorkloadReport,
     getUtilizationStats,
     downloadFlightAssignmentsReport,
     getFlightAssignmentsStats,
     getAdvancedAnalytics,
-    getFatiguePreview
+    getFatiguePreview,
+    getSmartRecommendations
 };

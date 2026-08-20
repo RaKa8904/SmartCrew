@@ -27,8 +27,14 @@ const calculateCrewScore = (crew, flight, workloadMap, idealRestHours = 12, maxW
         return 50;
     })();
 
-    // 50% Workload Balance weight ensures equal distribution of flight hours across all crew
-    return (workloadScore * 0.50) + (restScore * 0.30) + (availabilityScore * 0.10) + (qualificationScore * 0.10);
+    // ML Fatigue Risk Penalty: penalize candidates with high predicted fatigue risk
+    const fatigueRisk = crew.fatigueRiskScore ?? 0;
+    const fatiguePenalty = (fatigueRisk / 100) * 40; // up to -40 points penalty for 100% fatigue risk
+
+    // Base score calculation incorporating workload, rest, availability, and qualification
+    const baseScore = (workloadScore * 0.35) + (restScore * 0.25) + (availabilityScore * 0.20) + (qualificationScore * 0.20);
+
+    return Math.max(0, Math.round(baseScore - fatiguePenalty));
 };
 
 const findBestCrew = (availableCrew, flight, workloadMap, rules = {}) => {

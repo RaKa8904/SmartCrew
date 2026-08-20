@@ -5,7 +5,8 @@ const {
     downloadFlightAssignmentsReport,
     getFlightAssignmentsStats,
     getAdvancedAnalytics,
-    getFatiguePreview
+    getFatiguePreview,
+    getSmartRecommendations
 } = require('../controllers/reportController');
 const { authMiddleware, roleMiddleware } = require('../middleware/auth');
 
@@ -17,5 +18,6 @@ router.get('/assignments/download', authMiddleware, roleMiddleware(['admin', 'sc
 router.get('/assignments', authMiddleware, roleMiddleware(['admin', 'scheduler']), getFlightAssignmentsStats);
 router.get('/advanced', authMiddleware, roleMiddleware(['admin', 'scheduler']), getAdvancedAnalytics);
 router.get('/fatigue/preview', authMiddleware, roleMiddleware(['admin', 'scheduler']), getFatiguePreview);
+router.get('/fatigue/recommendations', authMiddleware, roleMiddleware(['admin', 'scheduler']), getSmartRecommendations);
 
 module.exports = router;

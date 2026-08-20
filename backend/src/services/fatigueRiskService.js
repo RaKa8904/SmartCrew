@@ -396,10 +396,80 @@ const getFatiguePreview = async ({ flightId, crewId }) => {
     };
 };
 
+const getSmartRecommendations = async (flightId) => {
+    const flight = await prisma.flight.findUnique({
+        where: { id: parseInt(flightId, 10) },
+        include: { schedules: { include: { crew: true } } }
+    });
+
+    if (!flight) {
+        const error = new Error('Flight not found');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    const allCrew = await prisma.crew.findMany({
+        where: { status: 'active' },
+        include: {
+            user: { select: { id: true, name: true, email: true } },
+            schedules: { include: { flight: true } }
+        }
+    });
+
+    const evaluated = await Promise.all(allCrew.map(async (crewMember) => {
+        const features = buildFatigueFeatures(crewMember, flight);
+        const mlResult = await predictFatigueMLBatch([features]);
+
+        let riskScore = 0;
+        let riskClass = 'low';
+        let riskDrivers = [];
+        let isML = false;
+
+        if (mlResult && mlResult.results && mlResult.results.length > 0) {
+            const res = mlResult.results[0];
+            riskClass = res.riskClass;
+            const probs = res.probabilities || {};
+            const highProb = probs.high || 0;
+            const medProb = probs.medium || 0;
+            riskScore = Math.round((highProb * 100) + (medProb * 50));
+            riskDrivers = res.riskDrivers || [];
+            isML = true;
+        } else {
+            const fallback = scoreFatigueFeatures(features);
+            riskScore = Math.round(fallback.riskScore);
+            riskClass = fallback.riskClass;
+        }
+
+        // Qualification matching check
+        let isQualified = true;
+        if (flight.requiredQualification && crewMember.qualification !== flight.requiredQualification) {
+            isQualified = false;
+        }
+
+        const matchScore = Math.max(0, Math.min(100, Math.round(100 - (riskScore * 0.7) - (isQualified ? 0 : 40))));
+
+        return {
+            crewId: crewMember.id,
+            name: crewMember.name || (crewMember.user ? crewMember.user.name : `Crew #${crewMember.id}`),
+            crewType: crewMember.crewType,
+            qualification: crewMember.qualification,
+            isQualified,
+            riskScore,
+            riskClass,
+            matchScore,
+            riskDrivers,
+            isML
+        };
+    }));
+
+    return evaluated.sort((a, b) => b.matchScore - a.matchScore);
+};
+
 module.exports = {
     getFatiguePreview,
     buildFatiguePreview,
     buildFatigueFeatures,
     scoreFatigueFeatures,
     predictFatigueMLBatch,
+    getSmartRecommendations,
 };

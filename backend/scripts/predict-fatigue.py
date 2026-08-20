@@ -35,11 +35,35 @@ def main():
         classes = list(pipeline.named_steps['model'].classes_)
 
         results = []
-        for pred_class, pred_proba in zip(pred_classes, pred_probas):
+        for index, (pred_class, pred_proba) in enumerate(zip(pred_classes, pred_probas)):
             probabilities = {cls: float(prob) for cls, prob in zip(classes, pred_proba)}
+            row = df.iloc[index]
+
+            # XAI Risk Driver calculation based on feature thresholds
+            drivers = []
+            duty_24 = row.get('dutyHours24', 0)
+            rest_hours = row.get('hoursSinceLastRest', 0)
+            consec_days = row.get('consecutiveDutyDays', 0)
+            tz_shift = row.get('timezoneCrossings', 0)
+
+            if duty_24 > 8:
+                drivers.append({'factor': 'dutyHours24', 'label': f"High 24h Duty ({duty_24:.1f}h)", 'impact': '+25%'})
+            if rest_hours < 12:
+                drivers.append({'factor': 'hoursSinceLastRest', 'label': f"Short Rest Window ({rest_hours:.1f}h)", 'impact': '+20%'})
+            if consec_days >= 4:
+                drivers.append({'factor': 'consecutiveDutyDays', 'label': f"{int(consec_days)} Consecutive Duty Days", 'impact': '+18%'})
+            if row.get('isLateNightDeparture', 0) == 1 or row.get('isEarlyMorningDeparture', 0) == 1:
+                drivers.append({'factor': 'circadianShift', 'label': 'Circadian Rhythm / Night Shift', 'impact': '+15%'})
+            if tz_shift >= 2:
+                drivers.append({'factor': 'timezoneCrossings', 'label': f"Timezone Shift ({int(tz_shift)} zones)", 'impact': '+12%'})
+
+            if not drivers:
+                drivers.append({'factor': 'adequateRest', 'label': 'Adequate Rest & Balanced Roster', 'impact': '-20%'})
+
             results.append({
                 "riskClass": pred_class.lower(),
-                "probabilities": probabilities
+                "probabilities": probabilities,
+                "riskDrivers": drivers[:3]
             })
 
         print(json.dumps({
