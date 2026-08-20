@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { Calendar, Clock, MapPin, Plane, CheckCircle2, Award, AlertCircle, RefreshCcw, Hand, UserCircle2 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 
+import CircadianTimeline from '../components/dashboard/CircadianTimeline';
+
 const getDutyColor = (pct) => {
     if (pct >= 85) return { bar: 'linear-gradient(90deg, #dc2626, #ef4444)', label: '#f87171', glow: 'rgba(239,68,68,0.5)' };
     if (pct >= 60) return { bar: 'linear-gradient(90deg, #b45309, #f59e0b)', label: '#fbbf24', glow: 'rgba(245,158,11,0.5)' };
@@ -137,7 +139,9 @@ const CrewDashboard = () => {
                     {/* SCHEDULE TAB */}
                     {activeTab === 'schedule' && (
                         <>
-                            <div className="flex items-center gap-2 mb-2">
+                            <CircadianTimeline nextFlight={schedules[0]?.flight} fatigueScore={25} />
+
+                            <div className="flex items-center gap-2 mb-2 pt-2">
                                 <Calendar size={18} style={{ color: '#0ea5e9' }} />
                                 <h3 className="font-bold text-white">Upcoming Assignments</h3>
                                 <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(14,165,233,0.1)', color: '#0ea5e9' }}>
