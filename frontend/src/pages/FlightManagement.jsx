@@ -210,13 +210,6 @@ const FlightDetailModal = ({ flight, onClose }) => {
                         )}
                     </div>
                 </div>
-
-                {/* Action Footer */}
-                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-white/5">
-                    <button onClick={onClose} className="px-5 py-2 rounded-lg bg-slate-900 border border-white/10 text-slate-300 text-sm font-semibold hover:bg-white/5 transition-colors cursor-pointer">
-                        Close Details
-                    </button>
-                </div>
             </div>
         </div>
     );

@@ -12,21 +12,31 @@ SmartCrew streamlines airline flight operations through three core portals:
 
 | Portal | User Role | Functionality |
 | :--- | :--- | :--- |
-| **Admin Operations** | System Administrators | User management, global compliance rule configuration, fleet analytics, fatigue reporting |
-| **Dispatch & Scheduling** | Flight Schedulers | Interactive roster workspace, automated crew scoring, drag-and-drop dispatch, overlap resolution |
-| **Crew Self-Service** | Pilots & Cabin Crew | Personal roster view, shift bidding, peer shift swaps, leave requests |
+| **Admin Operations** | System Administrators | User management, global compliance rule configuration, fleet analytics, fatigue governance |
+| **Dispatch & Scheduling** | Flight Schedulers | Interactive roster workspace, AI recommendation engine, drag-and-drop dispatch, overlap resolution |
+| **Crew Self-Service** | Pilots & Cabin Crew | Personal roster view, circadian recovery timeline, shift bidding, peer shift swaps, leave requests |
 
 ---
 
 ## Core Capabilities
 
-### Machine Learning Fatigue Risk Engine
+### Machine Learning Fatigue Risk Engine & Explainable AI (XAI)
 Integrated predictive fatigue risk management engine evaluating crew burnout parameters before duty assignment:
 - **Biomathematical Risk Scoring**: Computes a continuous fatigue score (0–100) and risk classification (Low, Medium, High).
-- **Multi-Window Duty Tracking**: Evaluates rolling duty metrics over 24-hour, 7-day, and 28-day historical windows.
-- **Circadian & Shift Disruption**: Incorporates rest intervals since last duty, consecutive duty days, time-zone shifts, and early morning or night departures.
-- **Random Forest Inference Model**: Uses a scikit-learn Random Forest classifier (`fatigue_model_v1.pkl`) invoked via a Python subprocess IPC pipeline in `fatigueRiskService.js`, with an automated heuristic baseline fallback.
-- **Preview API Integration**: Exposes real-time pre-assignment risk predictions (`GET /api/reports/fatigue/preview`).
+- **Explainable AI (XAI) Risk Drivers**: Highlights exact contributing risk factors per recommendation (for example, High 24h Duty, Short Rest Window, Window of Circadian Low shift, Timezone crossings).
+- **Random Forest Inference Model**: Uses a scikit-learn Random Forest classifier (`fatigue_model_v1.pkl`) trained on active database duty samples and invoked via Python subprocess IPC.
+- **24-Hour Automated Background Retraining**: Automated daily background schedule (`startAutoRetrainScheduler`) that ingests live PostgreSQL database records and retrains model weights hands-free.
+
+### AI Smart Recommendation Drawer & Auto-Assignment
+Specialized recommendation engine for flight schedulers:
+- **Candidate Ranking**: Evaluates all active crew members against flight requirements, ranking candidates by match score.
+- **Qualification Match Filtering**: Ensures type rating and qualification alignment (e.g. B777 / A320 Captain requirements).
+- **1-Click Auto-Assignment**: Assigns top recommended crew directly onto flight legs with automatic drawer close and instant FIDS synchronization.
+
+### Circadian Rhythm & Sleep Recovery Timeline
+Interactive circadian recovery tracking widget:
+- **Sleep Window Visualization**: Displays required rest intervals, sleep windows, and circadian buffer hours before duty departure.
+- **Window of Circadian Low (WOCL)**: Alerts schedulers and crew when duty legs overlap circadian night windows (22:00–06:00).
 
 ### Dynamic Rules & Automated Constraint Engine
 Scoring algorithm evaluating crew eligibility against regulatory limits:
@@ -36,7 +46,7 @@ Scoring algorithm evaluating crew eligibility against regulatory limits:
 - Automatic overlap detection and conflict prevention.
 
 ### Interactive Drag-and-Drop Scheduler
-Specialized visual workspace for flight operations schedulers:
+Visual workspace for flight operations schedulers:
 - Dynamic crew filtering by availability, qualification, and date window.
 - Visual assignment onto flight rosters using `@dnd-kit`.
 - Instant server-side constraint re-validation upon assignment.
@@ -51,18 +61,6 @@ Flexible flight ingestion pipeline:
 Operations synchronization across active web sessions:
 - **Flight Information Display System (FIDS)**: Live departure/arrival board updated via `Socket.io` WebSockets.
 - **Automated Dispatch Alerts**: Email notifications sent via Nodemailer SMTP upon roster updates or shift assignments.
-
-### Crew Self-Service & Rostering
-Direct schedule management for crew members:
-- **Peer Shift Swaps**: Peer-to-peer shift exchange with multi-tier approval control.
-- **Flight Bidding**: Crew preference bidding on unassigned flight legs.
-- **Leave Request Management**: Submission and tracking of time-off requests.
-
-### Operational Analytics
-Actionable intelligence for flight operations management:
-- **Fleet Reliability Metrics**: 7-day delay trends and dispatch performance indicators.
-- **Fatigue Distribution Analysis**: Duty hours vs. operational alert correlation scatter plots.
-- **Workload Export**: Raw CSV export capability for crew utilization reports.
 
 ---
 
@@ -87,39 +85,39 @@ SmartCrew/
 ├── backend/
 │   ├── artifacts/
 │   │   └── fatigue/
-│   │       └── fatigue_model_v1.pkl     # Trained Random Forest model artifact
+│   │       ├── fatigue_model_v1.pkl             # Trained Random Forest model artifact
+│   │       └── fatigue_model_v1_manifest.json   # Model metadata and training manifest
 │   ├── prisma/
-│   │   ├── schema.prisma                # Database schemas (Users, Crew, Flights, Schedules, Rules)
-│   │   └── seed.js                      # Database seeder script
+│   │   ├── schema.prisma                        # Database schemas (Users, Crew, Flights, Schedules, Rules)
+│   │   └── seed.js                              # Database seeder script
 │   ├── scripts/
-│   │   ├── generate-fatigue-dataset.js  # Synthetic training data generator
-│   │   ├── train-fatigue-model.py       # ML training pipeline script
-│   │   └── predict-fatigue.py           # Subprocess model inference bridge
+│   │   ├── generate-fatigue-dataset.js          # Live database training data generator
+│   │   ├── train-fatigue-model.py               # ML training pipeline script
+│   │   └── predict-fatigue.py                   # Subprocess model inference bridge with XAI
 │   └── src/
 │       ├── algorithms/
-│       │   └── scheduling.js            # Core crew eligibility scoring algorithm
-│       ├── controllers/                 # Express API controllers
-│       ├── middleware/                  # JWT authentication and RBAC middleware
-│       ├── routes/                      # API route definitions
+│       │   └── scheduling.js                    # Core crew eligibility scoring algorithm
+│       ├── controllers/                         # Express API controllers
+│       ├── middleware/                          # JWT authentication and RBAC middleware
+│       ├── routes/                              # API route definitions
 │       ├── services/
-│       │   ├── emailService.js          # SMTP notification service
-│       │   ├── fatigueRiskService.js     # ML model integration and heuristic fallback
-│       │   ├── flightSyncService.js     # Aviationstack API integration
-│       │   ├── reportingService.js      # Analytics aggregations
-│       │   ├── schedulingService.js     # Duty constraint checking
-│       │   └── socketService.js         # WebSocket broadcast management
-│       └── index.js                     # Application entry point
+│       │   ├── fatigueRiskService.js             # ML model batch integration & smart recommendations
+│       │   ├── flightSyncService.js             # Aviationstack API integration
+│       │   ├── reportingService.js              # Analytics aggregations
+│       │   ├── schedulingService.js             # Duty constraint checking
+│       │   └── socketService.js                 # WebSocket broadcast management
+│       └── index.js                             # Application entry point with 24h retrain scheduler
 │
 └── frontend/
     └── src/
-        ├── components/                  # Layout and reusable UI components
-        ├── context/                     # Auth and global application state
+        ├── components/                          # Layout and reusable UI components
+        ├── context/                             # Auth and global application state
         ├── pages/
-        │   ├── AdminDashboard.jsx       # Analytics and system rules management
-        │   ├── SchedulerDashboard.jsx   # Interactive drag-and-drop workspace
-        │   ├── CrewDashboard.jsx        # Crew schedule, swaps, and bidding
-        │   └── LiveFlightBoard.jsx      # Real-time FIDS display
-        └── index.css                    # Global application styles
+        │   ├── AdminDashboard.jsx               # Analytics and system rules management
+        │   ├── SchedulerDashboard.jsx           # Interactive drag-and-drop & AI recommendation workspace
+        │   ├── CrewDashboard.jsx                # Crew schedule, circadian recovery, swaps, and bidding
+        │   └── LiveFlightBoard.jsx              # Real-time FIDS display
+        └── index.css                            # Global application styles
 ```
 
 ---
@@ -174,10 +172,10 @@ npx prisma db seed
 
 ### 4. Machine Learning Model Training (Optional)
 
-The pre-trained model artifact is included in `backend/artifacts/fatigue/fatigue_model_v1.pkl`. To re-generate synthetic datasets and re-train the model:
+The pre-trained model artifact is included in `backend/artifacts/fatigue/fatigue_model_v1.pkl`. To re-generate datasets from active database records and re-train the model:
 
 ```bash
-# Generate synthetic training dataset
+# Generate training dataset from live DB records
 node scripts/generate-fatigue-dataset.js
 
 # Train the Random Forest model
