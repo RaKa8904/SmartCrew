@@ -70,8 +70,10 @@ def main():
             "results": results if is_list else results[0],
             "status": "success"
         }))
+        sys.stdout.flush()
     except Exception as e:
         print(json.dumps({"error": str(e), "status": "error"}))
+        sys.stdout.flush()
         sys.exit(1)
 
 if __name__ == "__main__":

@@ -458,16 +458,22 @@ const SchedulerDashboard = () => {
                                                 </div>
 
                                                 <div className="flex flex-wrap gap-1.5 mt-2">
-                                                    {cand.riskDrivers?.map((driver, idx) => (
-                                                        <span
-                                                            key={idx}
-                                                            className={`text-[11px] px-2 py-0.5 rounded-md font-medium border ${driver.impact.startsWith('+')
-                                                                ? 'bg-amber-500/10 text-amber-300 border-amber-500/20'
-                                                                : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'}`}
-                                                        >
-                                                            {driver.label} ({driver.impact})
-                                                        </span>
-                                                    ))}
+                                                    {cand.riskDrivers?.map((driver, idx) => {
+                                                        const label = driver.label || driver.key || 'Factor';
+                                                        const impactStr = driver.impact || (driver.contribution !== undefined ? `+${driver.contribution}%` : '0%');
+                                                        const isWarning = String(impactStr).startsWith('+');
+
+                                                        return (
+                                                            <span
+                                                                key={idx}
+                                                                className={`text-[11px] px-2 py-0.5 rounded-md font-medium border ${isWarning
+                                                                    ? 'bg-amber-500/10 text-amber-300 border-amber-500/20'
+                                                                    : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'}`}
+                                                            >
+                                                                {label} ({impactStr})
+                                                            </span>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
 

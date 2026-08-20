@@ -194,10 +194,25 @@ const scoreFatigueFeatures = (features) => {
             contribution: Number(item.contribution.toFixed(2)),
         }));
 
+    const riskDrivers = topFactors.map((item) => ({
+        factor: item.key,
+        label: item.label,
+        impact: `+${Math.round(item.contribution)}%`
+    }));
+
+    if (riskDrivers.length === 0) {
+        riskDrivers.push({
+            factor: 'adequateRest',
+            label: 'Adequate Rest & Balanced Roster',
+            impact: '-20%'
+        });
+    }
+
     return {
         riskScore,
         riskClass,
         topFactors,
+        riskDrivers,
     };
 };
 
@@ -243,19 +258,21 @@ const predictFatigueMLBatch = (featuresArray) => {
             PREDICT_SCRIPT_PATH,
             MODEL_PATH,
             JSON.stringify(featuresArray)
-        ], { encoding: 'utf-8', timeout: 30000 });
+        ], { encoding: 'utf-8', timeout: 5000 });
 
         const parsed = JSON.parse(result.trim());
-        if (parsed.status === 'success') {
-            return parsed.results.map((res) => {
-                const pHigh = res.probabilities.high || 0;
-                const pMedium = res.probabilities.medium || 0;
+        if (parsed && parsed.status === 'success') {
+            const items = Array.isArray(parsed.results) ? parsed.results : [parsed.results];
+            return items.map((res) => {
+                const probs = res.probabilities || {};
+                const pHigh = probs.high || 0;
+                const pMedium = probs.medium || 0;
                 const riskScore = Math.round((pMedium * 50) + (pHigh * 100));
 
                 return {
                     riskScore,
-                    riskClass: res.riskClass,
-                    topFactors: [],
+                    riskClass: res.riskClass || 'low',
+                    riskDrivers: res.riskDrivers || [],
                     isML: true
                 };
             });
@@ -345,7 +362,7 @@ const getFatiguePreview = async ({ flightId, crewId }) => {
 
     const previews = crewList.map((crew, idx) => {
         const features = featuresList[idx];
-        const scored = mlResults[idx];
+        const scored = mlResults[idx] || scoreFatigueFeatures(features);
 
         return {
             crew: {
@@ -416,31 +433,20 @@ const getSmartRecommendations = async (flightId) => {
         }
     });
 
-    const evaluated = await Promise.all(allCrew.map(async (crewMember) => {
-        const features = buildFatigueFeatures(crewMember, flight);
-        const mlResult = await predictFatigueMLBatch([features]);
+    const featuresList = allCrew.map((crewMember) => buildFatigueFeatures(crewMember, flight));
+    let mlResults = predictFatigueMLBatch(featuresList);
 
-        let riskScore = 0;
-        let riskClass = 'low';
-        let riskDrivers = [];
-        let isML = false;
+    if (!mlResults) {
+        mlResults = featuresList.map((features) => scoreFatigueFeatures(features));
+    }
 
-        if (mlResult && mlResult.results && mlResult.results.length > 0) {
-            const res = mlResult.results[0];
-            riskClass = res.riskClass;
-            const probs = res.probabilities || {};
-            const highProb = probs.high || 0;
-            const medProb = probs.medium || 0;
-            riskScore = Math.round((highProb * 100) + (medProb * 50));
-            riskDrivers = res.riskDrivers || [];
-            isML = true;
-        } else {
-            const fallback = scoreFatigueFeatures(features);
-            riskScore = Math.round(fallback.riskScore);
-            riskClass = fallback.riskClass;
-        }
+    const evaluated = allCrew.map((crewMember, idx) => {
+        const res = mlResults[idx] || scoreFatigueFeatures(featuresList[idx]);
+        const riskScore = Math.round(res.riskScore || 0);
+        const riskClass = res.riskClass || 'low';
+        const riskDrivers = res.riskDrivers || res.topFactors || [];
+        const isML = res.isML || false;
 
-        // Qualification matching check
         let isQualified = true;
         if (flight.requiredQualification && crewMember.qualification !== flight.requiredQualification) {
             isQualified = false;
@@ -460,7 +466,7 @@ const getSmartRecommendations = async (flightId) => {
             riskDrivers,
             isML
         };
-    }));
+    });
 
     return evaluated.sort((a, b) => b.matchScore - a.matchScore);
 };
