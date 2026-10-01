@@ -69,8 +69,8 @@ const AIRPORTS = {
 };
 
 // Map Tiler Configurations
-const DARK_MAP_TILES = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-const LIGHT_MAP_TILES = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+const DARK_MAP_TILES = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}';
+const LIGHT_MAP_TILES = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}';
 
 // Generate curved (quadratic Bezier) route path points between two coords
 const getBezierRoutePoints = (start, end, numPoints = 25) => {
@@ -307,7 +307,7 @@ const FleetTrackerMap = () => {
                 >
                     <TileLayer
                         key={tileUrl}
-                        attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+                        attribution='Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ'
                         url={tileUrl}
                     />
 
