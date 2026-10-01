@@ -98,10 +98,6 @@ const LoginPage = () => {
         setError('');
         try {
             await login(email, password);
-            if (reduceMotion) {
-                navigate('/dashboard');
-                return;
-            }
             setFlightState('spool');
             // Engine spooling duration
             setTimeout(() => {
