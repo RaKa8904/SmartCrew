@@ -42,7 +42,7 @@ const AnimatedNumber = ({ value }) => {
         return () => clearInterval(t);
     }, [value, isNumeric]);
 
-    return <span>{display}</span>;
+    return <span className="font-tabular-nums">{display}</span>;
 };
 
 const AdminDashboard = () => {
@@ -164,10 +164,10 @@ const AdminDashboard = () => {
     ];
 
     const statCards = [
-        { label: 'Total Flights', value: stats.totalFlights, icon: <Plane size={20} />, accent: '#0ea5e9', bg: 'rgba(14,165,233,0.1)', border: 'rgba(14,165,233,0.2)' },
-        { label: 'Active Crew Members', value: stats.totalCrew, icon: <Users size={20} />, accent: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.2)' },
-        { label: 'Duty Assignments', value: stats.totalAssignments, icon: <CheckCircle size={20} />, accent: '#10b981', bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.2)' },
-        { label: 'Active Conflicts', value: stats.conflicts, icon: <AlertTriangle size={20} />, accent: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.2)' },
+        { label: 'Total Flights', value: stats.totalFlights, icon: <Plane size={20} strokeWidth={1.5} />, textClass: 'text-sky-500', bgClass: 'bg-sky-500/10', borderClass: 'border-sky-500/20' },
+        { label: 'Active Crew', value: stats.totalCrew, icon: <Users size={20} strokeWidth={1.5} />, textClass: 'text-sky-500', bgClass: 'bg-sky-500/10', borderClass: 'border-sky-500/20' },
+        { label: 'Duty Assignments', value: stats.totalAssignments, icon: <CheckCircle size={20} strokeWidth={1.5} />, textClass: 'text-emerald-500', bgClass: 'bg-emerald-500/10', borderClass: 'border-emerald-500/20' },
+        { label: 'Active Conflicts', value: stats.conflicts, icon: <AlertTriangle size={20} strokeWidth={1.5} />, textClass: 'text-amber-500', bgClass: 'bg-amber-500/10', borderClass: 'border-amber-500/20' },
     ];
 
     const ruleCards = [
@@ -184,22 +184,20 @@ const AdminDashboard = () => {
                 <div>
                     <div className="flex items-center gap-2 mb-1">
                         <span className="hud-label">OPERATIONS CENTER</span>
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 pulse-dot" />
-                        <span className="hud-label" style={{ color: '#10b981' }}>LIVE</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-dot" />
+                        <span className="hud-label text-emerald-500">LIVE</span>
                     </div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">Admin Dashboard</h1>
-                    <p className="mt-1" style={{ color: '#64748b' }}>Fleet & Crew Operational Overview</p>
+                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Admin Dashboard</h1>
+                    <p className="mt-1 text-slate-500">Fleet & Crew Operational Overview</p>
                 </div>
                 <div className="flex gap-3">
                     <button onClick={() => navigate('/generate')}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-950/40"
-                        style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#ffffff' }}>
-                        <Zap size={16} /> AI Scheduler Workspace
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-900/20 bg-emerald-500 text-white hover:bg-emerald-600">
+                        <Zap size={16} strokeWidth={1.5} /> AI Scheduler
                     </button>
                     <button onClick={() => navigate('/live-board')}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                        style={{ background: 'rgba(14,165,233,0.1)', border: '1px solid rgba(14,165,233,0.2)', color: '#0ea5e9' }}>
-                        <Radio size={16} /> Live Board
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 hover:bg-sky-500/20">
+                        <Radio size={16} strokeWidth={1.5} /> Live Board
                     </button>
                 </div>
             </div>
@@ -207,16 +205,14 @@ const AdminDashboard = () => {
             {/* Stat Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {statCards.map((card, i) => (
-                    <div key={i} className="glass-card p-5 group cursor-default"
-                        style={{ borderColor: card.border }}>
+                    <div key={i} className={`glass-card p-5 group cursor-default ${card.borderClass} border`}>
                         <div className="flex justify-between items-start mb-4">
                             <p className="hud-label">{card.label}</p>
-                            <div className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
-                                style={{ background: card.bg, color: card.accent }}>
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${card.bgClass} ${card.textClass}`}>
                                 {card.icon}
                             </div>
                         </div>
-                        <h3 className="text-3xl font-bold text-white number-appear">
+                        <h3 className="text-3xl font-bold text-slate-900 dark:text-white number-appear">
                             <AnimatedNumber value={card.value} />
                         </h3>
                     </div>
@@ -224,13 +220,13 @@ const AdminDashboard = () => {
             </div>
 
             {/* Live GPS Fleet Tracker */}
-            <div className="glass-card p-0 overflow-hidden" style={{ height: '400px' }}>
-                <div className="p-4 border-b border-slate-700/50 bg-slate-900/50 flex justify-between items-center isolate relative z-[1000]">
-                    <h3 className="font-bold text-white flex items-center gap-2">
-                        <Radio size={18} className="text-emerald-400" />
+            <div className="glass-card p-0 overflow-hidden border-slate-200 dark:border-slate-800" style={{ height: '400px' }}>
+                <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center isolate relative z-[1000]">
+                    <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <Radio size={18} strokeWidth={1.5} className="text-emerald-500" />
                         Live Fleet Tracker
                     </h3>
-                    <span className="hud-label tracking-widest text-[#10b981]">GPS ACTIVE</span>
+                    <span className="hud-label tracking-widest text-emerald-500">GPS ACTIVE</span>
                 </div>
                 {/* The map itself needs relative positioning and zIndex below the sticky popup layer to not override other layers incorrectly, Leaflet handles its own zIndex internally */}
                 <div style={{ height: 'calc(100% - 60px)', position: 'relative', zIndex: 1 }}>
@@ -243,8 +239,8 @@ const AdminDashboard = () => {
                 {/* Utilization Bar */}
                 <div className="lg:col-span-2 glass-card p-6">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-bold text-white flex items-center gap-2">
-                            <TrendingUp size={18} style={{ color: '#0ea5e9' }} />
+                        <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <TrendingUp size={18} strokeWidth={1.5} className="text-sky-500" />
                             Crew Utilization
                         </h3>
                         <span className="hud-label">TOP 6 MEMBERS</span>
@@ -275,8 +271,8 @@ const AdminDashboard = () => {
                 {/* Flight Status Pie */}
                 <div className="glass-card p-6">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-bold text-white flex items-center gap-2">
-                            <Activity size={18} style={{ color: '#f59e0b' }} />
+                        <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <Activity size={18} strokeWidth={1.5} className="text-amber-500" />
                             Flight Status
                         </h3>
                         <span className="hud-label">BREAKDOWN</span>
@@ -302,8 +298,8 @@ const AdminDashboard = () => {
                 {/* Fleet Delays Line Chart */}
                 <div className="lg:col-span-2 glass-card p-6">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-bold text-white flex items-center gap-2">
-                            <Activity size={18} style={{ color: '#ec4899' }} />
+                        <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <Activity size={18} strokeWidth={1.5} className="text-sky-500" />
                             Fleet Delays (7-Day Forecast)
                         </h3>
                         <span className="hud-label">ROLLING WINDOW</span>
@@ -327,8 +323,8 @@ const AdminDashboard = () => {
                 {/* Crew Fatigue Scatter Plot */}
                 <div className="glass-card p-6">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-bold text-white flex items-center gap-2">
-                            <AlertTriangle size={18} style={{ color: '#ef4444' }} />
+                        <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <AlertTriangle size={18} strokeWidth={1.5} className="text-red-500" />
                             Crew Fatigue Hotspots
                         </h3>
                         <span className="hud-label">HOURS vs FATIGUE RISK</span>
@@ -353,32 +349,30 @@ const AdminDashboard = () => {
             {/* Bottom Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* System Rules */}
-                <div className="glass-card p-6">
+                <div className="glass-card p-6 border-slate-200 dark:border-slate-800">
                     <div className="flex items-center justify-between mb-5">
-                        <h3 className="font-bold text-white flex items-center gap-2">
-                            <Settings size={18} style={{ color: '#0ea5e9' }} /> System Rules
+                        <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <Settings size={18} strokeWidth={1.5} className="text-sky-500" /> System Rules
                         </h3>
                         <button onClick={() => navigate('/rules')}
-                            className="flex items-center gap-1 text-xs font-semibold transition-colors"
-                            style={{ color: '#0ea5e9' }}>
-                            <ExternalLink size={12} /> Manage
+                            className="flex items-center gap-1 text-xs font-semibold transition-colors text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300">
+                            <ExternalLink size={12} strokeWidth={1.5} /> Manage
                         </button>
                     </div>
                     {rulesLoading ? (
                         <div className="space-y-3">
-                            {[1, 2, 3, 4].map(n => <div key={n} className="skeleton h-12 rounded-xl" />)}
+                            {[1, 2, 3, 4].map(n => <div key={n} className="skeleton h-12 rounded-xl bg-slate-200 dark:bg-slate-800" />)}
                         </div>
                     ) : (
                         <div className="grid grid-cols-2 gap-3">
                             {ruleCards.map((r, i) => (
-                                <div key={i} className="p-4 rounded-xl transition-all group cursor-pointer"
-                                    style={{ background: 'rgba(14,165,233,0.05)', border: '1px solid rgba(14,165,233,0.08)' }}
+                                <div key={i} className="p-4 rounded-xl transition-all group cursor-pointer bg-slate-50 dark:bg-sky-500/5 border border-slate-200 dark:border-sky-500/10 hover:border-sky-500/30"
                                     onClick={() => navigate('/rules')}>
                                     <div className="text-lg mb-1">{r.icon}</div>
-                                    <p className="hud-label mb-1">{r.label}</p>
-                                    <p className="text-lg font-bold" style={{ color: '#0ea5e9' }}>
+                                    <p className="hud-label mb-1 text-slate-500">{r.label}</p>
+                                    <p className="text-lg font-bold text-sky-600 dark:text-sky-400">
                                         {r.value}
-                                        <span className="text-xs font-normal ml-1" style={{ color: '#475569' }}>{r.unit}</span>
+                                        <span className="text-xs font-normal ml-1 text-slate-500">{r.unit}</span>
                                     </p>
                                 </div>
                             ))}
@@ -387,25 +381,24 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Recent Activity */}
-                <div className="glass-card p-6">
+                <div className="glass-card p-6 border-slate-200 dark:border-slate-800">
                     <div className="flex items-center justify-between mb-5">
-                        <h3 className="font-bold text-white flex items-center gap-2">
-                            <Clock size={18} style={{ color: '#0ea5e9' }} /> Recent Assignments
+                        <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <Clock size={18} strokeWidth={1.5} className="text-sky-500" /> Recent Assignments
                         </h3>
-                        <span className="hud-label">LATEST 5</span>
+                        <span className="hud-label text-slate-500">LATEST 5</span>
                     </div>
                     <div className="space-y-2">
                         {recentActivity.length === 0 ? (
-                            <p className="text-center py-6" style={{ color: '#475569' }}>No recent assignments</p>
+                            <p className="text-center py-6 text-slate-500">No recent assignments</p>
                         ) : recentActivity.map((a, i) => (
-                            <div key={i} className="flex items-center justify-between p-3 rounded-xl"
-                                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+                            <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
                                 <div className="flex items-center gap-3">
-                                    <span className="fids-code text-xs" style={{ color: '#0ea5e9' }}>{a.flight}</span>
-                                    <span className="text-sm" style={{ color: '#94a3b8' }}>{a.route}</span>
+                                    <span className="fids-code text-xs text-sky-600 dark:text-sky-400">{a.flight}</span>
+                                    <span className="text-sm text-slate-600 dark:text-slate-400">{a.route}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs" style={{ color: '#64748b' }}>{a.crew} crew</span>
+                                    <span className="text-xs text-slate-500">{a.crew} crew</span>
                                     <span className={`status-badge status-${a.status}`}>
                                         {a.status}
                                     </span>
@@ -415,59 +408,59 @@ const AdminDashboard = () => {
                     </div>
                 </div>
                 {/* AI Model Management */}
-                <div className="glass-card p-6">
+                <div className="glass-card p-6 border-slate-200 dark:border-slate-800">
                     <div className="flex items-center justify-between mb-5">
-                        <h3 className="font-bold text-white flex items-center gap-2">
-                            <Radio size={18} style={{ color: '#10b981' }} /> ML Model Retraining & Governance
+                        <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <Radio size={18} strokeWidth={1.5} className="text-emerald-500" /> ML Model Retraining
                         </h3>
-                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981' }}>
+                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                             {modelStatus?.isRetraining ? 'Retraining...' : 'Active (Online)'}
                         </span>
                     </div>
 
                     <div className="space-y-4">
                         <div className="grid grid-cols-3 gap-3 text-center">
-                            <div className="p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                <p className="hud-label text-xs mb-1">ACCURACY</p>
-                                <p className="text-lg font-bold text-emerald-400">
+                            <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+                                <p className="hud-label text-xs mb-1 text-slate-500">ACCURACY</p>
+                                <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                                     {modelStatus?.metrics?.selectedMetrics?.accuracy
                                         ? `${(modelStatus.metrics.selectedMetrics.accuracy * 100).toFixed(1)}%`
                                         : '94.2%'}
                                 </p>
                             </div>
-                            <div className="p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                <p className="hud-label text-xs mb-1">F1 MACRO</p>
-                                <p className="text-lg font-bold text-cyan-400">
+                            <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+                                <p className="hud-label text-xs mb-1 text-slate-500">F1 MACRO</p>
+                                <p className="text-lg font-bold text-sky-600 dark:text-sky-400">
                                     {modelStatus?.metrics?.selectedMetrics?.f1Macro
                                         ? modelStatus.metrics.selectedMetrics.f1Macro.toFixed(3)
                                         : '0.925'}
                                 </p>
                             </div>
-                            <div className="p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                <p className="hud-label text-xs mb-1">DB SAMPLES</p>
-                                <p className="text-lg font-bold text-purple-400">
+                            <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+                                <p className="hud-label text-xs mb-1 text-slate-500">DB SAMPLES</p>
+                                <p className="text-lg font-bold text-slate-700 dark:text-slate-300">
                                     {modelStatus?.metrics?.datasetRows || '1,250+'}
                                 </p>
                             </div>
                         </div>
 
-                        <div className="p-3.5 rounded-xl text-xs space-y-1.5" style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                            <div className="flex justify-between text-slate-300">
+                        <div className="p-3.5 rounded-xl text-xs space-y-1.5 bg-emerald-50/50 dark:bg-emerald-500/5 border border-emerald-100 dark:border-emerald-500/15">
+                            <div className="flex justify-between text-slate-700 dark:text-slate-300">
                                 <span>Model Architecture:</span>
-                                <span className="font-semibold text-emerald-400">Random Forest Classifier</span>
+                                <span className="font-semibold text-emerald-600 dark:text-emerald-400">Random Forest Classifier</span>
                             </div>
-                            <div className="flex justify-between text-slate-300">
+                            <div className="flex justify-between text-slate-700 dark:text-slate-300">
                                 <span>Training Data Source:</span>
-                                <span className="font-semibold text-emerald-400">Active Postgres DB + Live History</span>
+                                <span className="font-semibold text-emerald-600 dark:text-emerald-400">Active Postgres DB + Live History</span>
                             </div>
-                            <div className="flex justify-between text-slate-300 pt-1 border-t border-emerald-500/20">
+                            <div className="flex justify-between text-slate-700 dark:text-slate-300 pt-1 border-t border-emerald-100 dark:border-emerald-500/20">
                                 <span>Automated Retrain Schedule:</span>
-                                <span className="font-bold text-sky-400">🤖 24h Daily Hands-Free</span>
+                                <span className="font-bold text-sky-600 dark:text-sky-400">🤖 24h Daily Hands-Free</span>
                             </div>
                         </div>
 
                         {retrainMessage && (
-                            <p className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 p-2.5 rounded-lg border border-emerald-500/20">
+                            <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/10 p-2.5 rounded-lg border border-emerald-200 dark:border-emerald-500/20">
                                 {retrainMessage}
                             </p>
                         )}
@@ -475,16 +468,15 @@ const AdminDashboard = () => {
                         <button
                             onClick={handleRetrainModel}
                             disabled={retrainLoading || modelStatus?.isRetraining}
-                            className="w-full py-2.5 px-4 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2"
-                            style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#ffffff' }}
+                            className="w-full py-2.5 px-4 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm"
                         >
                             {retrainLoading || modelStatus?.isRetraining ? (
                                 <>
-                                    <Clock size={16} className="animate-spin" /> Ingesting Live DB & Retraining...
+                                    <Clock size={16} strokeWidth={1.5} className="animate-spin" /> Ingesting Live DB & Retraining...
                                 </>
                             ) : (
                                 <>
-                                    <Radio size={16} /> Retrain Fatigue Model on Active Database Data
+                                    <Radio size={16} strokeWidth={1.5} /> Retrain Model
                                 </>
                             )}
                         </button>
