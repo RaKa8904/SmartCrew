@@ -137,15 +137,15 @@ const LoginPage = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-slate-50 dark:bg-slate-950">
+        <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-slate-950">
 
             {/* Animated aviation background */}
-            <div className="absolute inset-0 pointer-events-none opacity-40 dark:opacity-20">
+            <div className="absolute inset-0 pointer-events-none opacity-10">
                 <div style={{
                     position: 'absolute', inset: 0,
                     backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)',
                     backgroundSize: '60px 60px',
-                }} className="text-slate-300 dark:text-sky-900" />
+                }} className="text-slate-500" />
             </div>
 
             {/* Plane Takeoff Sequence */}
@@ -195,15 +195,15 @@ const LoginPage = () => {
                             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6 bg-sky-500 shadow-lg shadow-sky-500/20">
                                 <Plane className="text-white" size={30} strokeWidth={1.5} />
                             </div>
-                            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-1 tracking-tight">SmartCrew Portal</h1>
+                            <h1 className="text-3xl font-bold text-white mb-1 tracking-tight">SmartCrew Portal</h1>
                             <p className="text-xs font-bold tracking-widest text-slate-500 uppercase mt-2">Aviation Operations Center</p>
                         </motion.div>
 
                         {/* Login Card */}
-                        <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800">
+                        <motion.div variants={itemVariants} className="bg-slate-900 p-8 rounded-2xl shadow-xl border border-slate-800">
                             <form onSubmit={handleSubmit} className="space-y-5">
                                 {error && (
-                                    <div className="p-3 rounded-xl text-sm bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400">
+                                    <div className="p-3 rounded-xl text-sm bg-red-500/10 border border-red-500/20 text-red-400">
                                         {error}
                                     </div>
                                 )}
@@ -215,7 +215,7 @@ const LoginPage = () => {
                                         <input
                                             type="email" value={email}
                                             onChange={e => setEmail(e.target.value)}
-                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-2.5 px-3 pl-10 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all"
+                                            className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3 pl-10 text-sm text-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all"
                                             placeholder="name@airline.com" required
                                         />
                                     </div>
@@ -228,7 +228,7 @@ const LoginPage = () => {
                                         <input
                                             type="password" value={password}
                                             onChange={e => setPassword(e.target.value)}
-                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-2.5 px-3 pl-10 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all"
+                                            className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3 pl-10 text-sm text-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all"
                                             placeholder="••••••••" required
                                         />
                                     </div>
@@ -255,7 +255,7 @@ const LoginPage = () => {
                         </motion.div>
 
                         {/* Quick access demo panel */}
-                        <motion.div variants={itemVariants} className="mt-6 bg-white/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+                        <motion.div variants={itemVariants} className="mt-6 bg-slate-900/50 p-4 rounded-2xl border border-slate-800">
                             <p className="text-xs font-bold tracking-widest text-center mb-3 text-slate-500">⚡ DEMO QUICK ACCESS</p>
                             <div className="grid grid-cols-2 gap-2">
                                 {DEMO_CREDS.map(cred => (
